@@ -1,0 +1,12 @@
+(library
+ (name zfs)
+ (public_name zfs)
+ (libraries nvpair)
+ (c_library_flags -lnvpair -lspl -lzutil -lzfs_core -lzfs)
+ (foreign_stubs
+  (language c)
+  (names zfs)
+  (include_dirs
+   /usr/src/sys/contrib/openzfs/include
+   /usr/src/sys/contrib/openzfs/lib/libspl/include
+   /usr/src/sys/contrib/openzfs/lib/libspl/include/os/freebsd)))
