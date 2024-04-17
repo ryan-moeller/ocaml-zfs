@@ -277,34 +277,25 @@ caml_zfs_ioc_pool_configs(value handle, value ns_gen)
 		Store_field(ret, 0, caml_unix_error_of_code(err));
 		CAMLreturn (ret);
 	}
+	zc.zc_cookie = gen;
 	caml_release_runtime_system();
-	for (;;) {
-		zc.zc_cookie = gen;
-		err = zfs_ioctl(fd, ZFS_IOC_POOL_CONFIGS, &zc);
-		if (err == ENOMEM) {
-			void *oldptr = (void *)zc.zc_nvlist_dst;
-			void *newptr = realloc(oldptr, zc.zc_nvlist_dst_size);
-			if (newptr == NULL) {
-				err = errno;
-				break;
-			}
-			zc.zc_nvlist_dst = (uint64_t)(uintptr_t)newptr;
-		} else if (err == EEXIST) {
-			void *p = (void *)zc.zc_nvlist_dst;
-			free(p);
-			caml_acquire_runtime_system();
-			ret = caml_alloc(1, 0);
-			Store_field(ret, 0, Val_none);
-			CAMLreturn (ret);
-		} else if (err) {
-			break;
-		} else {
-			gen = zc.zc_cookie;
+	while ((err = zfs_ioctl(fd, ZFS_IOC_POOL_CONFIGS, &zc)) == ENOMEM) {
+		void *oldptr = (void *)zc.zc_nvlist_dst;
+		void *newptr = realloc(oldptr, zc.zc_nvlist_dst_size);
+		if (newptr == NULL) {
+			err = errno;
 			break;
 		}
+		zc.zc_nvlist_dst = (uint64_t)(uintptr_t)newptr;
+		zc.zc_cookie = gen;
 	}
 	caml_acquire_runtime_system();
-	if (err) {
+	if (err == EEXIST) {
+		void *p = (void *)zc.zc_nvlist_dst;
+		free(p);
+		ret = caml_alloc(1, 0);
+		Store_field(ret, 0, Val_none);
+	} else if (err) {
 		void *p = (void *)zc.zc_nvlist_dst;
 		free(p);
 		ret = caml_alloc(1, 1);
@@ -347,19 +338,14 @@ caml_zfs_ioc_pool_stats(value handle, value name)
 		CAMLreturn (ret);
 	}
 	caml_release_runtime_system();
-	for (;;) {
-		err = zfs_ioctl(fd, ZFS_IOC_POOL_STATS, &zc);
-		if (err == ENOMEM) {
-			void *oldptr = (void *)zc.zc_nvlist_dst;
-			void *newptr = realloc(oldptr, zc.zc_nvlist_dst_size);
-			if (newptr == NULL) {
-				err = errno;
-				break;
-			}
-			zc.zc_nvlist_dst = (uint64_t)(uintptr_t)newptr;
-		} else {
+	while ((err = zfs_ioctl(fd, ZFS_IOC_POOL_STATS, &zc)) == ENOMEM) {
+		void *oldptr = (void *)zc.zc_nvlist_dst;
+		void *newptr = realloc(oldptr, zc.zc_nvlist_dst_size);
+		if (newptr == NULL) {
+			err = errno;
 			break;
 		}
+		zc.zc_nvlist_dst = (uint64_t)(uintptr_t)newptr;
 	}
 	caml_acquire_runtime_system();
 	if (err) {
