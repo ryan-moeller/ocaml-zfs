@@ -307,7 +307,6 @@ caml_zfs_ioc_pool_configs(value handle, value ns_gen)
 	if (err) {
 		void *p = (void *)zc.zc_nvlist_dst;
 		free(p);
-		caml_acquire_runtime_system();
 		ret = caml_alloc(1, 1);
 		Store_field(ret, 0, caml_unix_error_of_code(err));
 	} else {
