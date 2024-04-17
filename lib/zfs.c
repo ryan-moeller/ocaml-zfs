@@ -315,7 +315,7 @@ caml_zfs_ioc_pool_configs(value handle, value ns_gen)
 		bytes = caml_alloc_initialized_string(len, p);
 		free(p);
 		tuple = caml_alloc_tuple(2);
-		Store_field(tuple, 0, gen);
+		Store_field(tuple, 0, caml_copy_int64(zc.zc_cookie));
 		Store_field(tuple, 1, bytes);
 		ret = caml_alloc(1, 0);
 		Store_field(ret, 0, caml_alloc_some(tuple));
