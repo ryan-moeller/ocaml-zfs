@@ -1,11 +1,14 @@
 (library
  (name zfs)
  (public_name zfs)
- (libraries nvpair)
- (c_library_flags -lnvpair -lspl -lzutil -lzfs_core -lzfs)
+ (libraries unix)
  (foreign_stubs
   (language c)
   (names zfs)
+  (flags
+   :standard
+   -include
+   /usr/src/sys/contrib/openzfs/include/os/freebsd/spl/sys/ccompile.h)
   (include_dirs
    /usr/src/sys/contrib/openzfs/include
    /usr/src/sys/contrib/openzfs/lib/libspl/include

@@ -1,4 +1,4 @@
 ZFS
 ---
 
-A few bindings for libzfs functions. Not complete or very useful.
+Low level OCaml bindings for OpenZFS ioctls.
