@@ -515,3 +515,21 @@ let () =
       Printf.eprintf "vdev_add failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup @@ List.cons vdev vdevs
+
+(* vdev_remove *)
+let () =
+  let vdevs =
+    List.init 4 (fun i ->
+        vdev_file_create @@ Printf.sprintf "%s%d" test_vdev_name i)
+  in
+  common_zpool_create vdevs;
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
+  let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.vdev_remove handle test_pool_name guid with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "vdev_remove failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
