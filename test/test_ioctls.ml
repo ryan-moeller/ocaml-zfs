@@ -637,3 +637,19 @@ let () =
       Printf.eprintf "vdev_split failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* vdev_setpath *)
+let () =
+  let vdevs = common_setup () in
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
+  let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
+  let path = Option.get @@ Nvlist.lookup_string vdev "path" in
+  (* Not actually a different path, but good enough for a test. *)
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.vdev_setpath handle test_pool_name guid path with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "vdev_setpath failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
