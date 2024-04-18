@@ -475,3 +475,30 @@ let () =
       Printf.eprintf "pool_discard_checkpoint failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* pool_initialize *)
+let () =
+  let vdevs = common_setup () in
+  let guids = Nvlist.alloc () in
+  List.iter
+    (fun path ->
+      let label = Option.get @@ vdev_label_read path in
+      let guid = Option.get @@ Nvlist.lookup_uint64 label "guid" in
+      Nvlist.add_uint64 guids path guid)
+    vdevs;
+  let args = Nvlist.alloc () in
+  Nvlist.add_uint64 args "initialize_command" 0L (* POOL_INITIALIZE_START *);
+  Nvlist.add_nvlist args "initialize_vdevs" guids;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_initialize handle test_pool_name packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let errors = Nvlist.unpack packed_errors in
+      ignore errors;
+      Printf.eprintf "pool_initialize failed with errors\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "pool_initialize failed without errors\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
