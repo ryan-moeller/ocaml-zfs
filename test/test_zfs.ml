@@ -4,8 +4,8 @@ open Zfs
 let () =
   let handle = Zfs_ioctls.open_handle () in
   match Zfs_ioctls.pool_configs handle 0L with
-  | Either.Left None -> ()
-  | Either.Left Some (new_gen, packed) ->
+  | Left None -> ()
+  | Left (Some (new_gen, packed)) ->
       Printf.printf "gen: %Lu\n" new_gen;
       let pools = Nvlist.unpack packed in
       let rec iter_pools pair =
@@ -17,5 +17,4 @@ let () =
             iter_pools @@ Some p
       in
       iter_pools None
-  | Either.Right e ->
-      Printf.printf "error: %s\n" @@ Unix.error_message e
+  | Right e -> Printf.printf "error: %s\n" @@ Unix.error_message e
