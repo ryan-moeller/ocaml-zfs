@@ -533,3 +533,36 @@ let () =
       Printf.eprintf "vdev_remove failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* vdev_set_state *)
+let () =
+  let vdevs = common_setup () in
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
+  let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
+  let flags = 11L (* VDEV_AUX_ERR_EXCEEDED (flags not always vdev_aux_t) *) in
+  let handle = Zfs_ioctls.open_handle () in
+  (match
+     Zfs_ioctls.vdev_set_state handle test_pool_name guid VdevStateFaulted flags
+   with
+  (* returns VdevStateUnknown except when assigning VdevStateOnline *)
+  | Left VdevStateUnknown -> ()
+  | Left state ->
+      Printf.eprintf "vdev_set_state returned unexpected state: ";
+      let name =
+        match state with
+        | VdevStateUnknown -> "unknown"
+        | VdevStateClosed -> "closed"
+        | VdevStateOffline -> "offline"
+        | VdevStateRemoved -> "removed"
+        | VdevStateCantOpen -> "can't open"
+        | VdevStateFaulted -> "faulted"
+        | VdevStateDegraded -> "degraded"
+        | VdevStateHealthy -> "healthy"
+      in
+      Printf.eprintf "%s\n" name;
+      failwith "unexpected state"
+  | Right e ->
+      Printf.eprintf "vdev_set_state failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
