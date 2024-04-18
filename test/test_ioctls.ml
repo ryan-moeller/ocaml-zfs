@@ -359,3 +359,14 @@ let () =
       failwith @@ Unix.error_message e
   | Right (None, e) -> failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* pool_scan *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_scan handle test_pool_name ScanScrub ScrubNormal with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "pool_scan failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
