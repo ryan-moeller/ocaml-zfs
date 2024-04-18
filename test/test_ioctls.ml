@@ -229,6 +229,15 @@ let common_vdev_attach vdevs name =
       failwith @@ Unix.error_message e);
   List.cons path vdevs
 
+let common_stats_get name =
+  let handle = Zfs_ioctls.open_handle () in
+  match Zfs_ioctls.objset_stats handle name false with
+  | Left (_stats, Some packed_stats) -> Nvlist.unpack packed_stats
+  | Left (_stats, None) -> failwith "objset_stats didn't return nvlist"
+  | Right e ->
+      Printf.eprintf "objset_stats failed\n";
+      failwith @@ Unix.error_message e
+
 (* pool_create *)
 (* pool_destroy *)
 let () =
@@ -666,4 +675,10 @@ let () =
   | Right e ->
       Printf.eprintf "vdev_setfru failed\n";
       failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* objset_stats *)
+let () =
+  let vdevs = common_setup () in
+  ignore @@ common_stats_get test_pool_name;
   common_cleanup vdevs
