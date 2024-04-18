@@ -426,3 +426,14 @@ let () =
   in
   history_loop 0L;
   common_cleanup vdevs
+
+(* pool_reguid *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_reguid handle test_pool_name with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "pool_reguid failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
