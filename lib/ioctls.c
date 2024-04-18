@@ -95,10 +95,10 @@ zfs_ioctl(int fd, unsigned long request, zfs_cmd_t *zc)
 }
 
 CAMLprim value
-caml_zfs_ioc_pool_create(value handle, value name, value config, value properties)
+caml_zfs_ioc_pool_create(value handle, value name, value config, value props_opt)
 {
-	CAMLparam4 (handle, name, config, properties);
-	CAMLlocal1 (ret);
+	CAMLparam4 (handle, name, config, props_opt);
+	CAMLlocal2 (props, ret);
 	zfs_cmd_t zc = {"\0"};
 	int fd, err;
 
@@ -111,8 +111,11 @@ caml_zfs_ioc_pool_create(value handle, value name, value config, value propertie
 	}
 	zc.zc_nvlist_conf = (uint64_t)(uintptr_t)Bytes_val(config);
 	zc.zc_nvlist_conf_size = caml_string_length(config);
-	zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(properties);
-	zc.zc_nvlist_src_size = caml_string_length(properties);
+	if (Is_some(props_opt)) {
+		props = Some_val(props_opt);
+		zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(props);
+		zc.zc_nvlist_src_size = caml_string_length(props);
+	}
 	caml_release_runtime_system();
 	err = zfs_ioctl(fd, ZFS_IOC_POOL_CREATE, &zc);
 	caml_acquire_runtime_system();

@@ -95,7 +95,7 @@ module Zfs_ioctls = struct
 
   (* pool_create handle name packed_config packed_props *)
   external pool_create :
-    handle -> string -> bytes -> bytes -> (unit, Unix.error) Either.t
+    handle -> string -> bytes -> bytes option -> (unit, Unix.error) Either.t
     = "caml_zfs_ioc_pool_create"
 
   (* pool_destroy handle name log_msg *)
