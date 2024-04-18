@@ -1,9 +1,8 @@
 open Nvpair
 open Zfs
 
-let handle = Zfs_ioctls.open_handle ()
-
 let () =
+  let handle = Zfs_ioctls.open_handle () in
   match Zfs_ioctls.pool_configs handle 0L with
   | Either.Left None -> ()
   | Either.Left Some (new_gen, packed) ->
