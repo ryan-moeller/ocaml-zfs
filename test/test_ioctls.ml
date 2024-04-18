@@ -653,3 +653,17 @@ let () =
       Printf.eprintf "vdev_setpath failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* vdev_setfru *)
+let () =
+  let vdevs = common_setup () in
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
+  let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.vdev_setfru handle test_pool_name guid "test" with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "vdev_setfru failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
