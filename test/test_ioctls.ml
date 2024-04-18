@@ -502,3 +502,16 @@ let () =
       Printf.eprintf "pool_initialize failed without errors\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* vdev_add *)
+let () =
+  let vdevs = common_setup () in
+  let vdev = vdev_file_create @@ Printf.sprintf "%s0" test_vdev_name in
+  let packed_conf = common_pack_root_vdevs [ vdev ] in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.vdev_add handle test_pool_name packed_conf false with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "vdev_add failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup @@ List.cons vdev vdevs
