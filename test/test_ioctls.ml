@@ -213,6 +213,22 @@ let common_get_config vdevs =
       Printf.eprintf "pool_tryimport failed\n";
       failwith @@ Unix.error_message e
 
+let common_vdev_attach vdevs name =
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
+  let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
+  let path = vdev_file_create name in
+  let packed_config = common_pack_root_vdevs [ path ] in
+  let handle = Zfs_ioctls.open_handle () in
+  (match
+     Zfs_ioctls.vdev_attach handle test_pool_name guid packed_config false false
+   with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "vdev_attach failed\n";
+      failwith @@ Unix.error_message e);
+  List.cons path vdevs
+
 (* pool_create *)
 (* pool_destroy *)
 let () =
@@ -565,4 +581,10 @@ let () =
   | Right e ->
       Printf.eprintf "vdev_set_state failed\n";
       failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* vdev_attach *)
+let () =
+  let vdevs = common_setup () in
+  let vdevs = common_vdev_attach vdevs @@ Printf.sprintf "%s0" test_vdev_name in
   common_cleanup vdevs
