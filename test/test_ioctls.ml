@@ -607,3 +607,33 @@ let () =
       Printf.eprintf "vdev_detach failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* vdev_split *)
+let () =
+  let vdevs = common_setup () in
+  let vdevs = common_vdev_attach vdevs @@ Printf.sprintf "%s0" test_vdev_name in
+  (* Build the config for the new pool. *)
+  let conf = Nvlist.alloc () in
+  let root = Nvlist.alloc () in
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let version = Option.get @@ Nvlist.lookup_uint64 label "version" in
+  let top = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
+  let children = Option.get @@ Nvlist.lookup_nvlist_array top "children" in
+  assert (Array.length children == 2);
+  Nvlist.add_string root "type" "root";
+  Nvlist.add_nvlist_array root "children" @@ Array.sub children 0 1;
+  let newname = Printf.sprintf "%s0" test_pool_name in
+  Nvlist.add_string conf "name" newname;
+  Nvlist.add_uint64 conf "version" version;
+  Nvlist.add_nvlist conf "vdev_tree" root;
+  let packed_conf = Nvlist.pack conf Nvlist.Native in
+  (* Split the pool. *)
+  let handle = Zfs_ioctls.open_handle () in
+  (match
+     Zfs_ioctls.vdev_split handle test_pool_name newname packed_conf None true
+   with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "vdev_split failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
