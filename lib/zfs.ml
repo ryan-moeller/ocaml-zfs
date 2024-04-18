@@ -103,7 +103,7 @@ module Zfs_ioctls = struct
     handle -> string -> string -> (unit, Unix.error) Either.t
     = "caml_zfs_ioc_pool_destroy"
 
-  (* pool_import handle name guid packed_config packed_props *)
+  (* pool_import handle name guid packed_config packed_props flags *)
   external pool_import :
     handle ->
     string ->
