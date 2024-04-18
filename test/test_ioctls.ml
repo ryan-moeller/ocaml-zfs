@@ -588,3 +588,22 @@ let () =
   let vdevs = common_setup () in
   let vdevs = common_vdev_attach vdevs @@ Printf.sprintf "%s0" test_vdev_name in
   common_cleanup vdevs
+
+(* vdev_detach *)
+let () =
+  let vdevs = common_setup () in
+  (* Get the guid of the initial vdev. *)
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
+  let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
+  (* Attach a vdev to create a mirror. *)
+  let vdevs = common_vdev_attach vdevs @@ Printf.sprintf "%s0" test_vdev_name in
+  Unix.sleep 1;
+  (* Detach the vdev. *)
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.vdev_detach handle test_pool_name guid with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "vdev_detach failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
