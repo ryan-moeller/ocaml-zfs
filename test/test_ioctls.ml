@@ -343,3 +343,19 @@ let () =
       Printf.eprintf "pool_configs failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* pool_stats *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_stats handle test_pool_name with
+  | Left packed_config ->
+      let config = Nvlist.unpack packed_config in
+      Nvlist.free config
+  | Right (Some packed_config, e) ->
+      Printf.eprintf "failed pool_stats with config";
+      let config = Nvlist.unpack packed_config in
+      Nvlist.free config;
+      failwith @@ Unix.error_message e
+  | Right (None, e) -> failwith @@ Unix.error_message e);
+  common_cleanup vdevs
