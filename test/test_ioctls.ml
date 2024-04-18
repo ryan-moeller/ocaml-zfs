@@ -319,3 +319,27 @@ let () =
       Printf.eprintf "pool_import failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* pool_configs *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_configs handle 0L with
+  | Left None -> ()
+  | Left (Some (ns_gen, packed_configs)) ->
+      Printf.printf "got configs for namespace generation: %Lu\n" ns_gen;
+      let configs = Nvlist.unpack packed_configs in
+      let rec iter_pools pair =
+        match Nvlist.next_nvpair configs pair with
+        | None -> ()
+        | Some p ->
+            let name = Nvpair.name p in
+            Printf.printf "\t%s\n" name;
+            iter_pools @@ Some p
+      in
+      iter_pools None;
+      Nvlist.free configs
+  | Right e ->
+      Printf.eprintf "pool_configs failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
