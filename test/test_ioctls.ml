@@ -94,10 +94,7 @@ let common_pack_root_vdevs vdevs =
          vdevs
   in
   Nvlist.add_nvlist_array root "children" disks;
-  Array.iter Nvlist.free disks;
-  let packed = Nvlist.pack root Nvlist.Native in
-  Nvlist.free root;
-  packed
+  Nvlist.pack root Nvlist.Native
 
 let common_pack_all_features () =
   let props = Nvlist.alloc () in
@@ -142,9 +139,7 @@ let common_pack_all_features () =
   Nvlist.add_uint64 props "feature@vdev_zaps_v2" 0L;
   Nvlist.add_uint64 props "feature@redaction_list_spill" 0L;
   Nvlist.add_uint64 props "feature@raidz_expansion" 0L;
-  let packed = Nvlist.pack props Nvlist.Native in
-  Nvlist.free props;
-  packed
+  Nvlist.pack props Nvlist.Native
 
 let common_zpool_create vdevs =
   let handle = Zfs_ioctls.open_handle () in
@@ -211,10 +206,6 @@ let common_get_config vdevs =
   Nvlist.add_uint32 policy "load-rewind-policy" 1l;
   Nvlist.add_nvlist conf "load-policy" policy;
   let packed_conf = Nvlist.pack conf Nvlist.Native in
-  Nvlist.free conf;
-  Nvlist.free root;
-  Nvlist.free policy;
-  Nvlist.free top;
   let handle = Zfs_ioctls.open_handle () in
   match Zfs_ioctls.pool_tryimport handle packed_conf with
   | Left packed_config -> packed_config
@@ -235,7 +226,6 @@ let () =
   let props = Nvlist.alloc () in
   Nvlist.add_string props "bootfs" test_pool_name;
   let packed = Nvlist.pack props Nvlist.Native in
-  Nvlist.free props;
   (match Zfs_ioctls.pool_set_props handle test_pool_name packed with
   | Left () -> ()
   | Right e ->
@@ -250,7 +240,7 @@ let () =
   (match Zfs_ioctls.pool_get_props handle test_pool_name with
   | Left packed_props ->
       let props = Nvlist.unpack packed_props in
-      Nvlist.free props
+      ignore props
   | Right e ->
       Printf.eprintf "pool_get_props failed\n";
       failwith @@ Unix.error_message e);
@@ -285,7 +275,6 @@ let () =
   let packed_config = common_get_config vdevs in
   let config = Nvlist.unpack packed_config in
   let name = Option.get @@ Nvlist.lookup_string config "name" in
-  Nvlist.free config;
   Printf.printf "got config for pool: %s\n" name;
   common_cleanup_vdevs vdevs
 
@@ -304,7 +293,6 @@ let () =
   let packed_config = common_get_config vdevs in
   let config = Nvlist.unpack packed_config in
   let guid = Option.get @@ Nvlist.lookup_uint64 config "pool_guid" in
-  Nvlist.free config;
   Printf.printf "pool guid: %Lu\n" guid;
   (match
      Zfs_ioctls.pool_import handle test_pool_name guid packed_config None
@@ -313,7 +301,6 @@ let () =
   | Left packed_conf ->
       let conf = Nvlist.unpack packed_conf in
       let name = Option.get @@ Nvlist.lookup_string conf "name" in
-      Nvlist.free conf;
       Printf.printf "imported pool: %s\n" name
   | Right e ->
       Printf.eprintf "pool_import failed\n";
@@ -337,8 +324,7 @@ let () =
             Printf.printf "\t%s\n" name;
             iter_pools @@ Some p
       in
-      iter_pools None;
-      Nvlist.free configs
+      iter_pools None
   | Right e ->
       Printf.eprintf "pool_configs failed\n";
       failwith @@ Unix.error_message e);
@@ -351,11 +337,11 @@ let () =
   (match Zfs_ioctls.pool_stats handle test_pool_name with
   | Left packed_config ->
       let config = Nvlist.unpack packed_config in
-      Nvlist.free config
+      ignore config
   | Right (Some packed_config, e) ->
       Printf.eprintf "failed pool_stats with config";
       let config = Nvlist.unpack packed_config in
-      Nvlist.free config;
+      ignore config;
       failwith @@ Unix.error_message e
   | Right (None, e) -> failwith @@ Unix.error_message e);
   common_cleanup vdevs
@@ -370,3 +356,5 @@ let () =
       Printf.eprintf "pool_scan failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* pool_freeze *)
