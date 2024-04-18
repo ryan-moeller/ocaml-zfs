@@ -682,3 +682,17 @@ let () =
   let vdevs = common_setup () in
   ignore @@ common_stats_get test_pool_name;
   common_cleanup vdevs
+
+(* objset_zplprops *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  let props =
+    match Zfs_ioctls.objset_zplprops handle test_pool_name with
+    | Left packed_zplprops -> Nvlist.unpack packed_zplprops
+    | Right e ->
+        Printf.eprintf "objset_zplprops failed\n";
+        failwith @@ Unix.error_message e
+  in
+  ignore props;
+  common_cleanup vdevs
