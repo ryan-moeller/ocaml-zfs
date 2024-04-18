@@ -355,6 +355,11 @@ let () =
   | Right e ->
       Printf.eprintf "pool_scan failed\n";
       failwith @@ Unix.error_message e);
+  (match Zfs_ioctls.pool_scan handle test_pool_name ScanNone ScrubNormal with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "pool_scan failed (ScanNone)\n";
+      failwith @@ Unix.error_message e);
   common_cleanup vdevs
 
 (* pool_freeze *)
