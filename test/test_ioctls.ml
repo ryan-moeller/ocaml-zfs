@@ -372,3 +372,14 @@ let () =
       Printf.eprintf "pool_freeze failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* pool_upgrade *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_upgrade handle test_pool_name 5000L with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "pool_upgrade failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
