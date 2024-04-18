@@ -125,7 +125,8 @@ module Zfs_ioctls = struct
     = "caml_zfs_ioc_pool_configs"
 
   (* pool_stats handle name *)
-  external pool_stats : handle -> string -> (bytes, Unix.error) Either.t
+  external pool_stats :
+    handle -> string -> (bytes, bytes option * Unix.error) Either.t
     = "caml_zfs_ioc_pool_stats"
 
   (* pool_tryimport handle packed_config *)
