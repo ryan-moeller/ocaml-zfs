@@ -437,3 +437,14 @@ let () =
       Printf.eprintf "pool_reguid failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* pool_reopen *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_reopen handle test_pool_name None with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "pool_reopen failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
