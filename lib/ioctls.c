@@ -3594,7 +3594,7 @@ caml_zfs_ioc_pool_checkpoint(value handle, value name)
 	int fd, err;
 
 	fd = Devzfs_val(handle);
-	if (strlcpy(zc.zc_name, String_val(handle), sizeof zc.zc_name)
+	if (strlcpy(zc.zc_name, String_val(name), sizeof zc.zc_name)
 	    >= sizeof zc.zc_name) {
 		ret = caml_alloc(1, 1);
 		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
