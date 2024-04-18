@@ -383,3 +383,46 @@ let () =
       Printf.eprintf "pool_upgrade failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* pool_get_history *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  let rec history_loop offset =
+    match Zfs_ioctls.pool_get_history handle test_pool_name offset with
+    | Left None -> ()
+    | Left (Some historybuf) ->
+        let historybuf_len = Bytes.length historybuf in
+        let rec entries_at size_offset =
+          let size_len = 8 in
+          if size_offset + size_len > historybuf_len then size_offset
+          else
+            let entry_offset = size_offset + size_len in
+            let entry_len =
+              Int64.to_int @@ Bytes.get_int64_le historybuf size_offset
+            in
+            let entry_end = entry_offset + entry_len in
+            if entry_end > historybuf_len then size_offset
+            else
+              let packed_entry = Bytes.sub historybuf entry_offset entry_len in
+              let entry = Nvlist.unpack packed_entry in
+              let rec entry_loop pair =
+                match Nvlist.next_nvpair entry pair with
+                | None -> ()
+                | Some p ->
+                    Printf.printf "\t%s\n" @@ Nvpair.name p;
+                    entry_loop @@ Some p
+              in
+              Printf.printf "history entry at offset %u:\n" entry_offset;
+              entry_loop None;
+              entries_at entry_end
+        in
+        let entries_end = Int64.of_int @@ entries_at 0 in
+        let next_offset = Int64.add offset entries_end in
+        history_loop next_offset
+    | Right e ->
+        Printf.eprintf "pool_get_history failed at offset %Lu\n" offset;
+        failwith @@ Unix.error_message e
+  in
+  history_loop 0L;
+  common_cleanup vdevs
