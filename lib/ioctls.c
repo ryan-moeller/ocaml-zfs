@@ -163,11 +163,11 @@ caml_zfs_ioc_pool_destroy(value handle, value name, value log_msg)
 
 CAMLprim value
 caml_zfs_ioc_pool_import_native(value handle, value name, value guid,
-    value config, value properties, value flags)
+    value config, value props_opt, value flags)
 {
-	CAMLparam5 (handle, name, guid, config, properties);
+	CAMLparam5 (handle, name, guid, config, props_opt);
 	CAMLxparam1 (flags);
-	CAMLlocal1 (ret);
+	CAMLlocal2 (props, ret);
 	zfs_cmd_t zc = {"\0"};
 	int fd, err;
 
@@ -181,9 +181,10 @@ caml_zfs_ioc_pool_import_native(value handle, value name, value guid,
 	zc.zc_guid = Int64_val(guid);
 	zc.zc_nvlist_conf = (uint64_t)(uintptr_t)Bytes_val(config);
 	zc.zc_nvlist_conf_size = caml_string_length(config);
-	if (Is_some(properties)) {
-		zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(Some_val(properties));
-		zc.zc_nvlist_src_size = caml_string_length(Some_val(properties));
+	if (Is_some(props_opt)) {
+		props = Some_val(props_opt);
+		zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(props);
+		zc.zc_nvlist_src_size = caml_string_length(props);
 	}
 	for (uint_t i = 0; i < Wosize_val(flags); i++) {
 		zc.zc_cookie |= Import_flag_val(Field(flags, i));
