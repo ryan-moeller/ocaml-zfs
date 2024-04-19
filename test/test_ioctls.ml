@@ -6,13 +6,13 @@ open Zfs
 let test_pool_name = "testpool"
 let test_dataset_name = Printf.sprintf "%s/testdataset" test_pool_name
 let test_snapshot_name = Printf.sprintf "%s@testsnapshot" test_dataset_name
+let test_mount_name = "testmnt"
+let test_file_name = "testfile"
 
 (*
 let test_bookmark_name = Printf.sprintf "%s#testbookmark" test_dataset_name
 let test_property_name = "user:testproperty"
 let test_property_value = "testvalue"
-let test_mount_name = "testmnt"
-let test_file_name = "testfile"
 let test_tag_name = "testtag"
 *)
 let test_vdev_name = "testdev"
@@ -775,4 +775,111 @@ let () =
   | Right e ->
       Printf.eprintf "diff failed\n";
       failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* obj_to_path *)
+let () =
+  let vdevs = common_setup () in
+  (* Create the mountpoint. *)
+  Unix.mkdir test_mount_name 0o770;
+  (* Mount the dataset. *)
+  let mount_cmd =
+    Printf.sprintf "/sbin/mount -t zfs %s %s" test_pool_name test_mount_name
+  in
+  assert (Unix.WEXITED 0 = Unix.system mount_cmd);
+  (* Make a moderately sized file so we can find and corrupt it. *)
+  let buflen = 65536 (* max size Unix.read can read *) in
+  let buffer = Bytes.create buflen in
+  let content = "openzfs!" in
+  let blitlen = String.length content in
+  for i = 0 to (buflen / blitlen) - 1 do
+    let offset = i * blitlen in
+    Bytes.blit_string content 0 buffer offset blitlen
+  done;
+  let path = Printf.sprintf "%s/%s" test_mount_name test_file_name in
+  let fd = Unix.openfile path [ Unix.O_WRONLY; Unix.O_CREAT ] 0o660 in
+  assert (buflen = Unix.write fd buffer 0 buflen);
+  Unix.fsync fd;
+  Unix.close fd;
+  (* Corrupt the file by overwriting some of the data. *)
+  let umount_cmd = Printf.sprintf "/sbin/umount -f %s" test_mount_name in
+  assert (Unix.WEXITED 0 = Unix.system umount_cmd);
+  let handle = Zfs_ioctls.open_handle () in
+  (match
+     Zfs_ioctls.pool_export handle test_pool_name false false
+       (Some "exporting test pool")
+   with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "pool_export failed (obj_to_path)\n";
+      failwith @@ Unix.error_message e);
+  let fd = Unix.openfile (List.hd vdevs) [ Unix.O_RDWR ] 0o660 in
+  let size = (Unix.fstat fd).st_size in
+  let offset =
+    Option.get
+    @@ Seq.find_map
+         (fun offset ->
+           assert (buflen = Unix.read fd buffer 0 buflen);
+           let s = Bytes.to_string buffer in
+           let re = Str.regexp_string content in
+           let f i = if Str.string_match re s i then Some i else None in
+           let idxs = Seq.take (buflen - blitlen) (Seq.ints 0) in
+           match Seq.find_map f idxs with
+           | Some i ->
+               let corruption = "corrupt" in
+               let corruption_len = String.length corruption in
+               Bytes.blit_string corruption 0 buffer i corruption_len;
+               Some offset
+           | None -> None)
+         (Seq.init ((size / buflen) - 1) (fun x -> x * buflen))
+  in
+  assert (offset = Unix.lseek fd (-buflen) Unix.SEEK_CUR);
+  assert (buflen = Unix.write fd buffer 0 buflen) (* Heavy, but effective. *);
+  Unix.fsync fd;
+  Unix.close fd;
+  (* Reveal the error. *)
+  let packed_config = common_get_config vdevs in
+  let config = Nvlist.unpack packed_config in
+  let guid = Option.get @@ Nvlist.lookup_uint64 config "pool_guid" in
+  let config =
+    match
+      Zfs_ioctls.pool_import handle test_pool_name guid packed_config None
+        [| ImportOnly |]
+    with
+    | Left packed_config -> Nvlist.unpack packed_config
+    | Right e ->
+        Printf.eprintf "pool_import failed (obj_to_path)\n";
+        failwith @@ Unix.error_message e
+  in
+  ignore config;
+  assert (Unix.WEXITED 0 = Unix.system mount_cmd);
+  let fd = Unix.openfile path [ Unix.O_RDONLY ] 0o660 in
+  (try
+     ignore @@ Unix.read fd buffer 0 buflen;
+     failwith "read didn't fail"
+   with Unix.Unix_error (Unix.EIO, _func, _param) -> ());
+  Unix.close fd;
+  (* Read the error log. *)
+  let error_log =
+    match Zfs_ioctls.error_log handle test_pool_name with
+    | Left entries -> entries
+    | Right e ->
+        Printf.eprintf "error_log failed\n";
+        failwith @@ Unix.error_message e
+  in
+  (* Get the object's path. *)
+  let zb = Array.get error_log 0 in
+  Printf.printf "got %d errors\n" (Array.length error_log);
+  Printf.printf "objset=%Lu object=%Lu level=%Ld blkid=%Lu\n" zb.objset zb.obj
+    zb.level zb.blkid;
+  let obj_path =
+    match Zfs_ioctls.obj_to_path handle test_pool_name zb.obj with
+    | Left path -> path
+    | Right e ->
+        Printf.eprintf "obj_to_path failed\n";
+        failwith @@ Unix.error_message e
+  in
+  Printf.printf "Found error in %s%s\n" test_mount_name obj_path;
+  assert (Unix.WEXITED 0 = Unix.system umount_cmd);
+  Unix.rmdir test_mount_name;
   common_cleanup vdevs
