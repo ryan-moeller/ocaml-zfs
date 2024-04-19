@@ -5,9 +5,9 @@ open Zfs
 
 let test_pool_name = "testpool"
 let test_dataset_name = Printf.sprintf "%s/testdataset" test_pool_name
+let test_snapshot_name = Printf.sprintf "%s@testsnapshot" test_dataset_name
 
 (*
-let test_snapshot_name = Printf.sprintf "%s@testsnapshot" test_dataset_name
 let test_bookmark_name = Printf.sprintf "%s#testbookmark" test_dataset_name
 let test_property_name = "user:testproperty"
 let test_property_value = "testvalue"
@@ -238,6 +238,24 @@ let common_dataset_create name =
   | Left () -> ()
   | Right e ->
       Printf.eprintf "create failed\n";
+      failwith @@ Unix.error_message e
+
+let common_snapshot_create name =
+  let pool = List.hd @@ Str.bounded_split (Str.regexp "[/@]") name 2 in
+  let args = Nvlist.alloc () in
+  let snaps = Nvlist.alloc () in
+  Nvlist.add_boolean snaps name;
+  Nvlist.add_nvlist args "snaps" snaps;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  match Zfs_ioctls.snapshot handle pool packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      ignore @@ Nvlist.unpack packed_errors;
+      Printf.eprintf "snapshot failed with errors\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "snapshot failed\n";
       failwith @@ Unix.error_message e
 
 let common_stats_get name =
@@ -739,5 +757,22 @@ let () =
   | Left next_opt -> ignore next_opt
   | Right e ->
       Printf.eprintf "next_obj failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* diff *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let snap0 = Printf.sprintf "%s0" test_snapshot_name in
+  let snap1 = Printf.sprintf "%s1" test_snapshot_name in
+  common_snapshot_create snap0;
+  common_snapshot_create snap1;
+  let _pfd0, pfd1 = Unix.pipe () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.diff handle snap1 snap0 pfd1 with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "diff failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
