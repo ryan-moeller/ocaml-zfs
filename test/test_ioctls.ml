@@ -730,3 +730,14 @@ let () =
   in
   assert (name = test_dataset_name);
   common_cleanup vdevs
+
+(* next_obj *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.next_obj handle test_pool_name 0L with
+  | Left next_opt -> ignore next_opt
+  | Right e ->
+      Printf.eprintf "next_obj failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
