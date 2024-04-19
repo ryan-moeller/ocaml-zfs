@@ -311,7 +311,7 @@ let () =
   let handle = Zfs_ioctls.open_handle () in
   (match
      Zfs_ioctls.pool_export handle test_pool_name false false
-       "exporting test pool"
+       (Some "exporting test pool")
    with
   | Left () -> ()
   | Right e ->
@@ -325,7 +325,7 @@ let () =
   let handle = Zfs_ioctls.open_handle () in
   (match
      Zfs_ioctls.pool_export handle test_pool_name false false
-       "exporting test pool"
+       (Some "exporting test pool")
    with
   | Left () -> ()
   | Right e ->
@@ -343,7 +343,7 @@ let () =
   let handle = Zfs_ioctls.open_handle () in
   (match
      Zfs_ioctls.pool_export handle test_pool_name false false
-       "exporting test pool"
+       (Some "exporting test pool")
    with
   | Left () -> ()
   | Right e ->

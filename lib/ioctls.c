@@ -231,10 +231,10 @@ caml_zfs_ioc_pool_import_bytecode(value *argv, int argn)
 
 CAMLprim value
 caml_zfs_ioc_pool_export(value handle, value name, value force,
-    value hardforce, value log_msg)
+    value hardforce, value log_msg_opt)
 {
-	CAMLparam5 (handle, name, force, hardforce, log_msg);
-	CAMLlocal1 (ret);
+	CAMLparam5 (handle, name, force, hardforce, log_msg_opt);
+	CAMLlocal2 (log_msg, ret);
 	zfs_cmd_t zc = {"\0"};
 	int fd, err;
 
@@ -247,7 +247,10 @@ caml_zfs_ioc_pool_export(value handle, value name, value force,
 	}
 	zc.zc_cookie = Bool_val(force);
 	zc.zc_guid = Bool_val(hardforce);
-	zc.zc_history = (uint64_t)(uintptr_t)String_val(log_msg);
+	if (Is_some(log_msg_opt)) {
+		log_msg = Some_val(log_msg_opt);
+		zc.zc_history = (uint64_t)(uintptr_t)String_val(log_msg);
+	}
 	caml_release_runtime_system();
 	err = zfs_ioctl(fd, ZFS_IOC_POOL_EXPORT, &zc);
 	caml_acquire_runtime_system();

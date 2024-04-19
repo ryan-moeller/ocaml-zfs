@@ -116,8 +116,12 @@ module Zfs_ioctls = struct
 
   (* pool_export handle name force hardforce log_str *)
   external pool_export :
-    handle -> string -> bool -> bool -> string -> (unit, Unix.error) Either.t
-    = "caml_zfs_ioc_pool_export"
+    handle ->
+    string ->
+    bool ->
+    bool ->
+    string option ->
+    (unit, Unix.error) Either.t = "caml_zfs_ioc_pool_export"
 
   (* pool_configs handle ns_gen *)
   external pool_configs :
