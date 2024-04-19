@@ -19,7 +19,7 @@
  (name zfs)
  (synopsis "Bindings for OpenZFS libzfs(3) ZFS library")
  (description "Functions for managing ZFS")
- (depends ocaml dune str nvpair)
+ (depends ocaml dune str nvpair unix)
  (tags
   (topics OpenZFS ZFS libzfs)))
 
