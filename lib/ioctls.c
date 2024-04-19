@@ -1681,6 +1681,20 @@ caml_zfs_ioc_inject_list_next(value handle, value guid)
 	CAMLreturn (ret);
 }
 
+static value
+make_zbookmark_phys(zbookmark_phys_t *zb)
+{
+	CAMLparam0 ();
+	CAMLlocal1 (record);
+
+	record = caml_alloc_tuple(4);
+	Store_field(record, 0, caml_copy_int64(zb->zb_objset));
+	Store_field(record, 1, caml_copy_int64(zb->zb_object));
+	Store_field(record, 2, caml_copy_int64(zb->zb_level));
+	Store_field(record, 3, caml_copy_int64(zb->zb_blkid));
+	CAMLreturn (record);
+}
+
 CAMLprim value
 caml_zfs_ioc_error_log(value handle, value name)
 {
@@ -1734,12 +1748,7 @@ caml_zfs_ioc_error_log(value handle, value name)
 			array = caml_alloc_tuple(nbookmarks);
 			for (uint_t i = 0; i < nbookmarks; i++) {
 				zbookmark_phys_t *zb = bookmarks + i;
-				tuple = caml_alloc_tuple(2);
-				Store_field(tuple, 0,
-				    caml_copy_int64(zb->zb_objset));
-				Store_field(tuple, 1,
-				    caml_copy_int64(zb->zb_object));
-				Store_field(array, i, tuple);
+				Store_field(array, i, make_zbookmark_phys(zb));
 			}
 		}
 		free(buf);

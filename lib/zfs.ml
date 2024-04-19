@@ -71,6 +71,13 @@ type zinject_record = {
   dvas : int32;
 }
 
+type zbookmark_phys = {
+  objset : int64;
+  obj : int64;
+  level : int64;
+  blkid : int64;
+}
+
 type userquota_prop =
   | UserquotaPropUserused
   | UserquotaPropUserquota
@@ -309,7 +316,7 @@ module Zfs_ioctls = struct
 
   (* error_log handle string *)
   external error_log :
-    handle -> string -> ((int64 * int64) array, Unix.error) Either.t
+    handle -> string -> (zbookmark_phys array, Unix.error) Either.t
     = "caml_zfs_ioc_error_log"
 
   (* clear handle name guid rewind *)
