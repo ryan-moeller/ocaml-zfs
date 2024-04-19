@@ -4,9 +4,9 @@ open Zfs
 (* let feature_enabled = "enabled" *)
 
 let test_pool_name = "testpool"
+let test_dataset_name = Printf.sprintf "%s/testdataset" test_pool_name
 
 (*
-let test_dataset_name = Printf.sprintf "%s/testdataset" test_pool_name
 let test_snapshot_name = Printf.sprintf "%s@testsnapshot" test_dataset_name
 let test_bookmark_name = Printf.sprintf "%s#testbookmark" test_dataset_name
 let test_property_name = "user:testproperty"
@@ -229,6 +229,17 @@ let common_vdev_attach vdevs name =
       failwith @@ Unix.error_message e);
   List.cons path vdevs
 
+let common_dataset_create name =
+  let args = Nvlist.alloc () in
+  Nvlist.add_int32 args "type" 2l (* ObjsetTypeZfs *);
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  match Zfs_ioctls.create handle name packed_args with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "create failed\n";
+      failwith @@ Unix.error_message e
+
 let common_stats_get name =
   let handle = Zfs_ioctls.open_handle () in
   match Zfs_ioctls.objset_stats handle name false with
@@ -237,6 +248,11 @@ let common_stats_get name =
   | Right e ->
       Printf.eprintf "objset_stats failed\n";
       failwith @@ Unix.error_message e
+
+let common_objset_id_lookup name =
+  let stats = common_stats_get name in
+  let prop = Option.get @@ Nvlist.lookup_nvlist stats "objsetid" in
+  Option.get @@ Nvlist.lookup_uint64 prop "value"
 
 (* pool_create *)
 (* pool_destroy *)
@@ -698,3 +714,19 @@ let () =
   common_cleanup vdevs
 
 (* objset_recvd_props requires a received dataset *)
+
+(* dsobj_to_dsname *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let dsobj = common_objset_id_lookup test_dataset_name in
+  let handle = Zfs_ioctls.open_handle () in
+  let name =
+    match Zfs_ioctls.dsobj_to_dsname handle test_pool_name dsobj with
+    | Left name -> name
+    | Right e ->
+        Printf.eprintf "dsobj_to_dsname failed\n";
+        failwith @@ Unix.error_message e
+  in
+  assert (name = test_dataset_name);
+  common_cleanup vdevs
