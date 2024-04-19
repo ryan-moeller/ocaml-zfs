@@ -696,3 +696,5 @@ let () =
   in
   ignore props;
   common_cleanup vdevs
+
+(* objset_recvd_props requires a received dataset *)
