@@ -1179,7 +1179,7 @@ caml_zfs_ioc_set_prop(value handle, value name, value props)
 	} else {
 		void *p = (void *)zc.zc_nvlist_dst;
 		free(p);
-		ret = caml_alloc(0, 0);
+		ret = caml_alloc(1, 0);
 		Store_field(ret, 0, Val_unit);
 	}
 	CAMLreturn (ret);
