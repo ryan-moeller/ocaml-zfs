@@ -1053,3 +1053,16 @@ let () =
   let _props = Nvlist.unpack @@ Option.get packed_props_opt in
   assert (snapshot = test_snapshot_name);
   common_cleanup vdevs
+
+(* get_fsacl *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  let _fsacl =
+    match Zfs_ioctls.get_fsacl handle test_pool_name with
+    | Left packed_fsacl -> Nvlist.unpack packed_fsacl
+    | Right e ->
+        Printf.eprintf "get_fsacl failed\n";
+        failwith @@ Unix.error_message e
+  in
+  common_cleanup vdevs
