@@ -1329,3 +1329,19 @@ let () =
       Printf.eprintf "release failed (without errors)\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* get_holds *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  common_hold_create test_snapshot_name test_tag_name;
+  let handle = Zfs_ioctls.open_handle () in
+  let _holds =
+    match Zfs_ioctls.get_holds handle test_snapshot_name with
+    | Left packed_holds -> Nvlist.unpack packed_holds
+    | Right e ->
+        Printf.eprintf "get_holds failed\n";
+        failwith @@ Unix.error_message e
+  in
+  common_cleanup vdevs
