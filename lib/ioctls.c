@@ -3069,10 +3069,10 @@ caml_zfs_ioc_send_new(value handle, value tosnap, value args)
 }
 
 CAMLprim value
-caml_zfs_ioc_send_space(value handle, value tosnap, value args)
+caml_zfs_ioc_send_space(value handle, value tosnap, value args_opt)
 {
-	CAMLparam3 (handle, tosnap, args);
-	CAMLlocal1 (ret);
+	CAMLparam3 (handle, tosnap, args_opt);
+	CAMLlocal2 (args, ret);
 	zfs_cmd_t zc = {"\0"};
 	int fd, err;
 
@@ -3083,8 +3083,11 @@ caml_zfs_ioc_send_space(value handle, value tosnap, value args)
 		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
 		CAMLreturn (ret);
 	}
-	zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(args);
-	zc.zc_nvlist_src_size = caml_string_length(args);
+	if (Is_some(args_opt)) {
+		args = Some_val(args_opt);
+		zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(args);
+		zc.zc_nvlist_src_size = caml_string_length(args);
+	}
 	zc.zc_nvlist_dst_size = MAX(2 * zc.zc_nvlist_src_size, 128 * 1024);
 	zc.zc_nvlist_dst = (uint64_t)(uintptr_t)malloc(zc.zc_nvlist_dst_size);
 	if (zc.zc_nvlist_dst == 0) {

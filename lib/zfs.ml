@@ -488,7 +488,7 @@ module Zfs_ioctls = struct
 
   (* send_space handle tosnap packed_args *)
   external send_space :
-    handle -> string -> bytes -> (bytes, Unix.error) Either.t
+    handle -> string -> bytes option -> (bytes, Unix.error) Either.t
     = "caml_zfs_ioc_send_space"
 
   (* clone handle name packed_args *)
