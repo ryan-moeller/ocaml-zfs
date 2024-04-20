@@ -1231,6 +1231,28 @@ let () =
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
 
+(* redact *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let snap0 = Printf.sprintf "%s0" test_snapshot_name in
+  let snap1 = Printf.sprintf "%s1" test_snapshot_name in
+  common_snapshot_create snap0;
+  common_snapshot_create snap1;
+  let args = Nvlist.alloc () in
+  Nvlist.add_string args "bookname" "testredaction";
+  let snaps = Nvlist.alloc () in
+  Nvlist.add_boolean snaps snap1;
+  Nvlist.add_nvlist args "snapnv" snaps;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.redact handle snap0 packed_args with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "redact failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
 (* destroy_snaps *)
 let () =
   let vdevs = common_setup () in
