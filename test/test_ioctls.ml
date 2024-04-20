@@ -1365,3 +1365,5 @@ let () =
       failwith @@ Unix.error_message e);
   Unix.close fd;
   common_cleanup vdevs
+
+(* recv is too complicated for testing here *)
