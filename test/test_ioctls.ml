@@ -1035,3 +1035,21 @@ let () =
   let _props = Nvlist.unpack @@ Option.get packed_props_opt in
   assert (dataset = test_dataset_name);
   common_cleanup vdevs
+
+(* snapshot_list_next *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let handle = Zfs_ioctls.open_handle () in
+  let snapshot, _stats, packed_props_opt, _cookie =
+    match Zfs_ioctls.snapshot_list_next handle test_dataset_name false 0L with
+    | Left (Some results) -> results
+    | Left None -> failwith "snapshot_list_next came back empty\n"
+    | Right e ->
+        Printf.eprintf "snapshot_list_next failed\n";
+        failwith @@ Unix.error_message e
+  in
+  let _props = Nvlist.unpack @@ Option.get packed_props_opt in
+  assert (snapshot = test_snapshot_name);
+  common_cleanup vdevs
