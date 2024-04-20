@@ -883,3 +883,73 @@ let () =
   assert (Unix.WEXITED 0 = Unix.system umount_cmd);
   Unix.rmdir test_mount_name;
   common_cleanup vdevs
+
+(* obj_to_stats *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let snap0 = Printf.sprintf "%s0" test_snapshot_name in
+  let snap1 = Printf.sprintf "%s1" test_snapshot_name in
+  common_snapshot_create snap0;
+  (* Create the mountpoint. *)
+  Unix.mkdir test_mount_name 0o770;
+  (* Mount the dataset. *)
+  let mount_cmd =
+    Printf.sprintf "/sbin/mount -t zfs %s %s" test_dataset_name test_mount_name
+  in
+  assert (Unix.WEXITED 0 = Unix.system mount_cmd);
+  (* Make a few files. *)
+  Seq.iter (fun i ->
+      let path = Printf.sprintf "%s/%s%d" test_mount_name test_file_name i in
+      let fd = Unix.openfile path [ Unix.O_WRONLY; Unix.O_CREAT ] 0o660 in
+      let buffer = Bytes.of_string @@ Printf.sprintf "foo%dbar%d" i i in
+      let buflen = Bytes.length buffer in
+      assert (buflen = Unix.write fd buffer 0 buflen);
+      Unix.close fd)
+  @@ Seq.take 8 @@ Seq.ints 0;
+  common_snapshot_create snap1;
+  (* Do a diff. *)
+  let pfd0, pfd1 = Unix.pipe () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.diff handle snap1 snap0 pfd1 with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "diff failed (obj_to_stats)\n";
+      failwith @@ Unix.error_message e);
+  Unix.close pfd1;
+  let record_len = 8 * 3 in
+  let buffer = Bytes.create record_len in
+  let rec read_inuse_records l =
+    let len = Unix.read pfd0 buffer 0 record_len in
+    if len != record_len then l
+    else
+      let ddr_type = Bytes.get_int64_ne buffer 0 in
+      let ddr_first = Bytes.get_int64_ne buffer 8 in
+      let ddr_last = Bytes.get_int64_ne buffer 16 in
+      Printf.printf "ddr_type=%Lu ddr_first=0x%Lx ddr_last=0x%Lx\n" ddr_type
+        ddr_first ddr_last;
+      if Int64.equal ddr_type 0x2L (* DDR_INUSE *) then
+        List.cons (ddr_first, ddr_last) (read_inuse_records l)
+      else read_inuse_records l
+  in
+  let diff_records = read_inuse_records [] in
+  Printf.printf "got %d records\n" (List.length diff_records);
+  Unix.close pfd0;
+  (* Get the object's path. *)
+  List.iter
+    (fun (ddr_first, ddr_last) ->
+      Printf.printf "first=0x%Lx last=0x%Lx " ddr_first ddr_last;
+      let num_objs = Int64.to_int @@ Int64.sub ddr_last ddr_first in
+      Printf.printf "num_objs=%d\n" num_objs;
+      Seq.iter (fun obj ->
+          match Zfs_ioctls.obj_to_stats handle snap1 obj with
+          | Left (path, stats) ->
+              Printf.printf "\tobj=0x%Lx gen=0x%Lu path=%s\n" obj stats.gen path
+          | Right _e -> ())
+      @@ Seq.map Int64.of_int
+      @@ Seq.take num_objs (Seq.ints @@ Int64.to_int ddr_first))
+    diff_records;
+  let umount_cmd = Printf.sprintf "/sbin/umount -f %s" test_mount_name in
+  assert (Unix.WEXITED 0 = Unix.system umount_cmd);
+  Unix.rmdir test_mount_name;
+  common_cleanup vdevs
