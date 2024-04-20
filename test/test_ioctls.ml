@@ -1510,3 +1510,24 @@ let () =
         failwith @@ Unix.error_message e
   in
   common_cleanup vdevs
+
+(* destroy_bookmarks *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  common_bookmark_create test_pool_name test_snapshot_name test_bookmark_name;
+  let list = Nvlist.alloc () in
+  Nvlist.add_boolean list test_bookmark_name;
+  let packed_list = Nvlist.pack list Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.destroy_bookmarks handle test_pool_name packed_list with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "destroy_bookmarks failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "destroy_bookmarks failed (without errors)\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
