@@ -1103,3 +1103,9 @@ let () =
       Printf.eprintf "set_prop failed (without errors)\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* create *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_cleanup vdevs
