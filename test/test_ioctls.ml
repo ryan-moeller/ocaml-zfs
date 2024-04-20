@@ -1457,3 +1457,15 @@ let () =
   in
   Printf.printf "send space: %Lu bytes\n" space;
   common_cleanup vdevs
+
+(* clear *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.clear handle test_pool_name None None with
+  | Left None -> ()
+  | Left (Some _packed_config) -> failwith "clear returned unexpected config\n"
+  | Right e ->
+      Printf.eprintf "clear failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
