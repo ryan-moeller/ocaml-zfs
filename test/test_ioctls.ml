@@ -1270,3 +1270,14 @@ let () =
       Printf.eprintf "userspace_many failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* userspace_upgrade *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.userspace_upgrade handle test_pool_name with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "userspace_upgrade failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
