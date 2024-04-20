@@ -1066,3 +1066,22 @@ let () =
         failwith @@ Unix.error_message e
   in
   common_cleanup vdevs
+
+(* set_fsacl *)
+let () =
+  let vdevs = common_setup () in
+  let acl = Nvlist.alloc () in
+  let perms = Nvlist.alloc () in
+  Nvlist.add_boolean perms "allow";
+  Nvlist.add_nvlist acl "el$" perms;
+  Nvlist.add_nvlist acl "El$" perms;
+  Nvlist.add_nvlist acl "ed$" perms;
+  Nvlist.add_nvlist acl "Ed$" perms;
+  let packed_acl = Nvlist.pack acl Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.set_fsacl handle test_pool_name false packed_acl with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "set_fsacl failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
