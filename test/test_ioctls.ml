@@ -14,21 +14,18 @@ let test_property_value = "testvalue"
 let test_tag_name = "testtag"
 let test_vdev_name = "testdev"
 let test_vdev_size = Int.shift_left 128 20 (* 128 MiB *)
+let test_channel_program_instrlimit = 1024L
+let test_channel_program_memlimit = Int64.shift_left 256L 10 (* 256 KiB *)
 
-(*
-let test_channel_program_instrlimit = 1024
-let test_channel_program_memlimit = Int.shift_left 256 10 (* 256 KiB *)
-let test_channel_program = "
-  args = ...
-  DS = args['DS']
-  res = {}
-  for fs in zfs.list.children(DS) do
-      res[#res+1] = fs
-  end
-  zfs.debug('found ' .. tostring(#res) .. ' children')
-  return res
-"
-*)
+let test_channel_program =
+  "args = ...\n\
+   DS = args['DS']\n\
+   res = {}\n\
+   for fs in zfs.list.children(DS) do\n\
+  \  res[#res+1] = fs\n\
+   end\n\
+   zfs.debug('found ' .. tostring(#res) .. ' children')\n\
+   return res\n"
 
 let vdev_file_create name =
   let home = Sys.getenv "HOME" in
@@ -1549,4 +1546,34 @@ let () =
   | Right e ->
       Printf.eprintf "nextboot failed\n";
       failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* channel_program *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let args = Nvlist.alloc () in
+  Nvlist.add_string args "program" test_channel_program;
+  let arglist = Nvlist.alloc () in
+  Nvlist.add_string arglist "DS" test_pool_name;
+  Nvlist.add_nvlist args "arg" arglist;
+  Nvlist.add_boolean_value args "sync" true;
+  Nvlist.add_uint64 args "instrlimit" test_channel_program_instrlimit;
+  Nvlist.add_uint64 args "memlimit" test_channel_program_memlimit;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  let _result =
+    match
+      Zfs_ioctls.channel_program handle test_pool_name packed_args
+        test_channel_program_memlimit
+    with
+    | Left packed_result -> Nvlist.unpack packed_result
+    | Right (Some packed_errors, e) ->
+        let _errors = Nvlist.unpack packed_errors in
+        Printf.eprintf "channel_program failed (with errors)\n";
+        failwith @@ Unix.error_message e
+    | Right (None, e) ->
+        Printf.eprintf "channel_program failed (without errors)\n";
+        failwith @@ Unix.error_message e
+  in
   common_cleanup vdevs
