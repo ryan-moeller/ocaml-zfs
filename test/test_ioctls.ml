@@ -1018,3 +1018,20 @@ let () =
   assert (pool = test_pool_name);
   common_clear_fault fault_id;
   common_cleanup vdevs
+
+(* dataset_list_next *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let handle = Zfs_ioctls.open_handle () in
+  let dataset, _stats, packed_props_opt, _cookie =
+    match Zfs_ioctls.dataset_list_next handle test_pool_name false 0L with
+    | Left (Some results) -> results
+    | Left None -> failwith "dataset_list_next came back empty\n"
+    | Right e ->
+        Printf.eprintf "dataset_list_next failed\n";
+        failwith @@ Unix.error_message e
+  in
+  let _props = Nvlist.unpack @@ Option.get packed_props_opt in
+  assert (dataset = test_dataset_name);
+  common_cleanup vdevs
