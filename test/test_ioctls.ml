@@ -1439,3 +1439,21 @@ let () =
       failwith @@ Unix.error_message e);
   Unix.close fd;
   common_cleanup vdevs
+
+(* send_space *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let handle = Zfs_ioctls.open_handle () in
+  let space =
+    match Zfs_ioctls.send_space handle test_snapshot_name None with
+    | Left packed_result ->
+        let result = Nvlist.unpack packed_result in
+        Option.get @@ Nvlist.lookup_uint64 result "space"
+    | Right e ->
+        Printf.eprintf "send_space failed\n";
+        failwith @@ Unix.error_message e
+  in
+  Printf.printf "send space: %Lu bytes\n" space;
+  common_cleanup vdevs
