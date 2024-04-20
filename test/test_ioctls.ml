@@ -1421,3 +1421,21 @@ let () =
   Unix.close pfd0;
   Domain.join td;
   common_cleanup vdevs
+
+(* send_new *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let fd = Unix.openfile "/dev/null" [ Unix.O_WRONLY ] 0 in
+  let args = Nvlist.alloc () in
+  Nvlist.add_int32 args "fd" @@ Int32.of_int @@ Util.int_of_descr fd;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.send_new handle test_snapshot_name packed_args with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "send_new failed\n";
+      failwith @@ Unix.error_message e);
+  Unix.close fd;
+  common_cleanup vdevs
