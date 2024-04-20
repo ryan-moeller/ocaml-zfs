@@ -1255,3 +1255,18 @@ let () =
   in
   Printf.printf "user root (0) used %Lu bytes\n" space;
   common_cleanup vdevs
+
+(* userspace_many *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match
+     Zfs_ioctls.userspace_many handle test_pool_name UserquotaPropUserused 8 0L
+   with
+  | Left (_cookie, useraccts) ->
+      let nuseraccts = Array.length useraccts in
+      Printf.printf "got %d useracct record(s)\n" nuseraccts
+  | Right e ->
+      Printf.eprintf "userspace_many failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
