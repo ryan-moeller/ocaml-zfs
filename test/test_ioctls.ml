@@ -1306,3 +1306,26 @@ let () =
   common_snapshot_create test_snapshot_name;
   common_hold_create test_snapshot_name test_tag_name;
   common_cleanup vdevs
+
+(* release *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  common_hold_create test_snapshot_name test_tag_name;
+  let args = Nvlist.alloc () in
+  let holds = Nvlist.alloc () in
+  Nvlist.add_boolean holds test_tag_name;
+  Nvlist.add_nvlist args test_snapshot_name holds;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.release handle test_pool_name packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "release failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "release failed (without errors)\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
