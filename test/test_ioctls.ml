@@ -6,15 +6,12 @@ open Zfs
 let test_pool_name = "testpool"
 let test_dataset_name = Printf.sprintf "%s/testdataset" test_pool_name
 let test_snapshot_name = Printf.sprintf "%s@testsnapshot" test_dataset_name
+let test_bookmark_name = Printf.sprintf "%s#testbookmark" test_dataset_name
 let test_mount_name = "testmnt"
 let test_file_name = "testfile"
 let test_property_name = "user:testproperty"
 let test_property_value = "testvalue"
 let test_tag_name = "testtag"
-
-(*
-let test_bookmark_name = Printf.sprintf "%s#testbookmark" test_dataset_name
-*)
 let test_vdev_name = "testdev"
 let test_vdev_size = Int.shift_left 128 20 (* 128 MiB *)
 
@@ -271,6 +268,21 @@ let common_clone_create origin name =
       failwith @@ Unix.error_message e
   | Right (None, e) ->
       Printf.eprintf "clone failed (without errors)\n";
+      failwith @@ Unix.error_message e
+
+let common_bookmark_create pool snap name =
+  let args = Nvlist.alloc () in
+  Nvlist.add_string args name snap;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  match Zfs_ioctls.bookmark handle pool packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "bookmark failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "bookmark failed (without errors)\n";
       failwith @@ Unix.error_message e
 
 let common_hold_create snap tag =
@@ -1468,4 +1480,12 @@ let () =
   | Right e ->
       Printf.eprintf "clear failed\n";
       failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* bookmark *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  common_bookmark_create test_pool_name test_snapshot_name test_bookmark_name;
   common_cleanup vdevs
