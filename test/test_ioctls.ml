@@ -1204,3 +1204,25 @@ let () =
       Printf.eprintf "promote failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* destroy_snaps *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let args = Nvlist.alloc () in
+  let snaps = Nvlist.alloc () in
+  Nvlist.add_boolean snaps test_snapshot_name;
+  Nvlist.add_nvlist args "snaps" snaps;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.destroy_snaps handle test_pool_name packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "destroy_snaps failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "destroy_snaps failed (without errors)\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
