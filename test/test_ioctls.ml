@@ -1531,3 +1531,22 @@ let () =
       Printf.eprintf "destroy_bookmarks failed (without errors)\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* nextboot *)
+let () =
+  let vdevs = common_setup () in
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let pool_guid = Option.get @@ Nvlist.lookup_uint64 label "pool_guid" in
+  let guid = Option.get @@ Nvlist.lookup_uint64 label "guid" in
+  let args = Nvlist.alloc () in
+  Nvlist.add_uint64 args "pool_guid" pool_guid;
+  Nvlist.add_uint64 args "guid" guid;
+  Nvlist.add_string args "command" "";
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.nextboot handle packed_args with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "nextboot failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
