@@ -1000,3 +1000,21 @@ let () =
   let fault_id = common_inject_fault vdevs in
   common_clear_fault fault_id;
   common_cleanup vdevs
+
+(* inject_list_next *)
+let () =
+  let vdevs = common_setup () in
+  let fault_id = common_inject_fault vdevs in
+  let handle = Zfs_ioctls.open_handle () in
+  let next_id, pool, _record =
+    match Zfs_ioctls.inject_list_next handle 0L with
+    | Left (Some stuff) -> stuff
+    | Left None -> failwith "inject_list_next came back empty\n"
+    | Right e ->
+        Printf.eprintf "inject_list_next failed\n";
+        failwith @@ Unix.error_message e
+  in
+  assert (next_id = fault_id);
+  assert (pool = test_pool_name);
+  common_clear_fault fault_id;
+  common_cleanup vdevs
