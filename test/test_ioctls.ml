@@ -1643,3 +1643,24 @@ let () =
   Printf.printf "space written: %Lu bytes (%Lu compressed, %Lu uncompressed)\n"
     space compressed uncompressed;
   common_cleanup vdevs
+
+(* space_snaps *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let snap0 = Printf.sprintf "%s0" test_snapshot_name in
+  let snap1 = Printf.sprintf "%s1" test_snapshot_name in
+  common_snapshot_create snap0;
+  common_snapshot_create snap1;
+  let args = Nvlist.alloc () in
+  Nvlist.add_string args "firstsnap" snap0;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  let _result =
+    match Zfs_ioctls.space_snaps handle snap1 packed_args with
+    | Left packed_result -> Nvlist.unpack packed_result
+    | Right e ->
+        Printf.eprintf "space_snaps failed\n";
+        failwith @@ Unix.error_message e
+  in
+  common_cleanup vdevs
