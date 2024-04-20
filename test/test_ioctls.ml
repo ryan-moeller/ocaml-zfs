@@ -1144,3 +1144,21 @@ let () =
   common_dataset_create test_dataset_name;
   common_snapshot_create test_snapshot_name;
   common_cleanup vdevs
+
+(* rollback *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let handle = Zfs_ioctls.open_handle () in
+  let target =
+    match Zfs_ioctls.rollback handle test_dataset_name None with
+    | Left packed_result ->
+        let result = Nvlist.unpack packed_result in
+        Option.get @@ Nvlist.lookup_string result "target"
+    | Right e ->
+        Printf.eprintf "rollback failed\n";
+        failwith @@ Unix.error_message e
+  in
+  assert (target = test_snapshot_name);
+  common_cleanup vdevs
