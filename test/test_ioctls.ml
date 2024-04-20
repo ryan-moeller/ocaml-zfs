@@ -1622,3 +1622,5 @@ let () =
   in
   Printf.printf "tmp_snapshot named %s\n" name;
   common_cleanup vdevs
+
+(* jail and unjail are a bit complicated for these tests (require a jail) *)
