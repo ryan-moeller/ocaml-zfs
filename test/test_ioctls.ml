@@ -1577,3 +1577,17 @@ let () =
         failwith @@ Unix.error_message e
   in
   common_cleanup vdevs
+
+(* error_log *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  let errors =
+    match Zfs_ioctls.error_log handle test_pool_name with
+    | Left error_log -> error_log
+    | Right e ->
+        Printf.eprintf "error_log failed\n";
+        failwith @@ Unix.error_message e
+  in
+  assert (errors = [||]);
+  common_cleanup vdevs
