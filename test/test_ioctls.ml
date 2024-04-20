@@ -1489,3 +1489,24 @@ let () =
   common_snapshot_create test_snapshot_name;
   common_bookmark_create test_pool_name test_snapshot_name test_bookmark_name;
   common_cleanup vdevs
+
+(* get_bookmarks *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  common_bookmark_create test_pool_name test_snapshot_name test_bookmark_name;
+  let props = Nvlist.alloc () in
+  Nvlist.add_boolean props "guid";
+  let packed_props = Nvlist.pack props Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  let _bookmarks =
+    match
+      Zfs_ioctls.get_bookmarks handle test_dataset_name (Some packed_props)
+    with
+    | Left packed_props -> Nvlist.unpack packed_props
+    | Right e ->
+        Printf.eprintf "get_bookmarks failed\n";
+        failwith @@ Unix.error_message e
+  in
+  common_cleanup vdevs
