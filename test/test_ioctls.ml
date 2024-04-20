@@ -1624,3 +1624,22 @@ let () =
   common_cleanup vdevs
 
 (* jail and unjail are a bit complicated for these tests (require a jail) *)
+
+(* space_written *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let handle = Zfs_ioctls.open_handle () in
+  let space, compressed, uncompressed =
+    match
+      Zfs_ioctls.space_written handle test_dataset_name test_snapshot_name
+    with
+    | Left result -> result
+    | Right e ->
+        Printf.eprintf "space_written failed\n";
+        failwith @@ Unix.error_message e
+  in
+  Printf.printf "space written: %Lu bytes (%Lu compressed, %Lu uncompressed)\n"
+    space compressed uncompressed;
+  common_cleanup vdevs
