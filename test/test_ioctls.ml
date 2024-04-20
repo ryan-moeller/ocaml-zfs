@@ -1345,3 +1345,23 @@ let () =
         failwith @@ Unix.error_message e
   in
   common_cleanup vdevs
+
+(* send *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let objsetid = common_objset_id_lookup test_snapshot_name in
+  let fd = Unix.openfile "/dev/null" [ Unix.O_WRONLY ] 0 in
+  let handle = Zfs_ioctls.open_handle () in
+  (match
+     Zfs_ioctls.send handle test_snapshot_name (Some fd) true objsetid None
+       false [||]
+   with
+  | Left None -> ()
+  | Left (Some _estimate) -> failwith "send returned an estimate unexpectedly"
+  | Right e ->
+      Printf.eprintf "send failed\n";
+      failwith @@ Unix.error_message e);
+  Unix.close fd;
+  common_cleanup vdevs
