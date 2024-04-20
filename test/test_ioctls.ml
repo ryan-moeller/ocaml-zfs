@@ -1605,3 +1605,20 @@ let () =
       Printf.eprintf "log_history failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* tmp_snapshot *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let prefix = Printf.sprintf "zfs-diff-%d" @@ Unix.getpid () in
+  let fd = Unix.openfile "/dev/zfs" [ Unix.O_RDWR ] 0 in
+  let handle = Zfs_ioctls.open_handle () in
+  let name =
+    match Zfs_ioctls.tmp_snapshot handle test_dataset_name prefix fd with
+    | Left name -> name
+    | Right e ->
+        Printf.eprintf "tmp_snapshot failed\n";
+        failwith @@ Unix.error_message e
+  in
+  Printf.printf "tmp_snapshot named %s\n" name;
+  common_cleanup vdevs
