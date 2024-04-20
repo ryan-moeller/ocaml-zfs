@@ -272,6 +272,45 @@ let common_objset_id_lookup name =
   let prop = Option.get @@ Nvlist.lookup_nvlist stats "objsetid" in
   Option.get @@ Nvlist.lookup_uint64 prop "value"
 
+let common_inject_fault vdevs =
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let guid = Option.get @@ Nvlist.lookup_uint64 label "guid" in
+  let record =
+    {
+      objset = 0L;
+      obj = 0L;
+      range_start = 0L;
+      range_end = 0L;
+      guid;
+      level = 0l;
+      error = 6l (* ENXIO *);
+      inject_type = 0L;
+      freq = 0l;
+      failfast = 0l;
+      func = "";
+      iotype = 7l (* ZIO_TYPES *);
+      duration = 0l;
+      timer = 10L;
+      nlanes = 2L;
+      cmd = 6l (* ZINJECT_DELAY_IO *);
+      dvas = 0l;
+    }
+  in
+  let handle = Zfs_ioctls.open_handle () in
+  match Zfs_ioctls.inject_fault handle test_pool_name record 0 with
+  | Left fault_id -> fault_id
+  | Right e ->
+      Printf.eprintf "inject_fault failed\n";
+      failwith @@ Unix.error_message e
+
+let common_clear_fault fault_id =
+  let handle = Zfs_ioctls.open_handle () in
+  match Zfs_ioctls.clear_fault handle fault_id with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "clear_fault failed\n";
+      failwith @@ Unix.error_message e
+
 (* pool_create *)
 (* pool_destroy *)
 let () =
@@ -952,4 +991,12 @@ let () =
   let umount_cmd = Printf.sprintf "/sbin/umount -f %s" test_mount_name in
   assert (Unix.WEXITED 0 = Unix.system umount_cmd);
   Unix.rmdir test_mount_name;
+  common_cleanup vdevs
+
+(* inject_fault *)
+(* clear_fault *)
+let () =
+  let vdevs = common_setup () in
+  let fault_id = common_inject_fault vdevs in
+  common_clear_fault fault_id;
   common_cleanup vdevs
