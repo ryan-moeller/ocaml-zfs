@@ -10,10 +10,10 @@ let test_mount_name = "testmnt"
 let test_file_name = "testfile"
 let test_property_name = "user:testproperty"
 let test_property_value = "testvalue"
+let test_tag_name = "testtag"
 
 (*
 let test_bookmark_name = Printf.sprintf "%s#testbookmark" test_dataset_name
-let test_tag_name = "testtag"
 *)
 let test_vdev_name = "testdev"
 let test_vdev_size = Int.shift_left 128 20 (* 128 MiB *)
@@ -271,6 +271,23 @@ let common_clone_create origin name =
       failwith @@ Unix.error_message e
   | Right (None, e) ->
       Printf.eprintf "clone failed (without errors)\n";
+      failwith @@ Unix.error_message e
+
+let common_hold_create snap tag =
+  let args = Nvlist.alloc () in
+  let holds = Nvlist.alloc () in
+  Nvlist.add_string holds snap tag;
+  Nvlist.add_nvlist args "holds" holds;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  match Zfs_ioctls.hold handle test_pool_name packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "hold failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "hold failed (without errors)\n";
       failwith @@ Unix.error_message e
 
 let common_stats_get name =
@@ -1280,4 +1297,12 @@ let () =
   | Right e ->
       Printf.eprintf "userspace_upgrade failed\n";
       failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* hold *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  common_hold_create test_snapshot_name test_tag_name;
   common_cleanup vdevs
