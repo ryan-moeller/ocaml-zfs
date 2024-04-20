@@ -1239,3 +1239,19 @@ let () =
       Printf.eprintf "inherit_prop failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* userspace_one *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  let space =
+    match
+      Zfs_ioctls.userspace_one handle test_pool_name UserquotaPropUserused "" 0L
+    with
+    | Left space -> space
+    | Right e ->
+        Printf.eprintf "userspace_one failed\n";
+        failwith @@ Unix.error_message e
+  in
+  Printf.printf "user root (0) used %Lu bytes\n" space;
+  common_cleanup vdevs
