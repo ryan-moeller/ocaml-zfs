@@ -258,6 +258,21 @@ let common_snapshot_create name =
       Printf.eprintf "snapshot failed\n";
       failwith @@ Unix.error_message e
 
+let common_clone_create origin name =
+  let args = Nvlist.alloc () in
+  Nvlist.add_string args "origin" origin;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  match Zfs_ioctls.clone handle name packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "clone failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "clone failed (without errors)\n";
+      failwith @@ Unix.error_message e
+
 let common_stats_get name =
   let handle = Zfs_ioctls.open_handle () in
   match Zfs_ioctls.objset_stats handle name false with
@@ -1161,4 +1176,13 @@ let () =
         failwith @@ Unix.error_message e
   in
   assert (target = test_snapshot_name);
+  common_cleanup vdevs
+
+(* clone *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let clone_name = Printf.sprintf "%s0" test_dataset_name in
+  common_clone_create test_snapshot_name clone_name;
   common_cleanup vdevs
