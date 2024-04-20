@@ -1226,3 +1226,16 @@ let () =
       Printf.eprintf "destroy_snaps failed (without errors)\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* inherit_prop *)
+let () =
+  let vdevs = common_setup () in
+  let handle = Zfs_ioctls.open_handle () in
+  (match
+     Zfs_ioctls.inherit_prop handle test_pool_name test_property_name false
+   with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "inherit_prop failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
