@@ -1591,3 +1591,17 @@ let () =
   in
   assert (errors = [||]);
   common_cleanup vdevs
+
+(* log_history *)
+let () =
+  let vdevs = common_setup () in
+  let args = Nvlist.alloc () in
+  Nvlist.add_string args "message" "this is a test";
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.log_history handle packed_args with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "log_history failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
