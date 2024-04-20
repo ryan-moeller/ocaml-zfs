@@ -1508,6 +1508,22 @@ let () =
   in
   common_cleanup vdevs
 
+(* get_bookmark_props *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  common_bookmark_create test_pool_name test_snapshot_name test_bookmark_name;
+  let handle = Zfs_ioctls.open_handle () in
+  let _props =
+    match Zfs_ioctls.get_bookmark_props handle test_bookmark_name with
+    | Left packed_props -> Nvlist.unpack packed_props
+    | Right e ->
+        Printf.eprintf "get_bookmark_props failed\n";
+        failwith @@ Unix.error_message e
+  in
+  common_cleanup vdevs
+
 (* destroy_bookmarks *)
 let () =
   let vdevs = common_setup () in
