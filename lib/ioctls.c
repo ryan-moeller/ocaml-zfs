@@ -3479,7 +3479,7 @@ caml_zfs_ioc_channel_program(value handle, value name, value args,
 	}
 	zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(args);
 	zc.zc_nvlist_src_size = caml_string_length(args);
-	zc.zc_nvlist_dst_size = Int_val(memlimit);
+	zc.zc_nvlist_dst_size = Int64_val(memlimit);
 	zc.zc_nvlist_dst = (uint64_t)(uintptr_t)malloc(zc.zc_nvlist_dst_size);
 	if (zc.zc_nvlist_dst == 0) {
 		err = errno;

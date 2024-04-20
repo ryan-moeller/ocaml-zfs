@@ -524,7 +524,7 @@ module Zfs_ioctls = struct
     handle ->
     string ->
     bytes ->
-    int ->
+    int64 ->
     (bytes, bytes option * Unix.error) Either.t = "caml_zfs_ioc_channel_program"
 
   (* load_key handle name packed_args *)
