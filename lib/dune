@@ -4,7 +4,7 @@
  (libraries unix)
  (foreign_stubs
   (language c)
-  (names ioctls)
+  (names util ioctls)
   (flags
    :standard
    -include

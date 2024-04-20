@@ -611,3 +611,7 @@ module Zfs_ioctls = struct
   external get_bootenv : handle -> string -> (bytes, Unix.error) Either.t
     = "caml_zfs_ioc_get_bootenv"
 end
+
+module Util = struct
+  external int_of_descr : Unix.file_descr -> int = "caml_zfs_util_int_of_descr"
+end
