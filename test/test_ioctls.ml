@@ -1109,3 +1109,15 @@ let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
   common_cleanup vdevs
+
+(* destroy *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.destroy handle test_dataset_name false with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "destroy failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
