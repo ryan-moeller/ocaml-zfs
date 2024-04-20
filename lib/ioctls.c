@@ -3221,7 +3221,7 @@ caml_zfs_ioc_bookmark(value handle, value name, value args)
 		CAMLreturn (ret);
 	}
 	caml_release_runtime_system();
-	while ((err = zfs_ioctl(fd, ZFS_IOC_SNAPSHOT, &zc)) == ENOMEM) {
+	while ((err = zfs_ioctl(fd, ZFS_IOC_BOOKMARK, &zc)) == ENOMEM) {
 		void *oldptr = (void *)zc.zc_nvlist_dst;
 		void *newptr = realloc(oldptr, zc.zc_nvlist_dst_size);
 		if (newptr == NULL) {
