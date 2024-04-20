@@ -1186,3 +1186,21 @@ let () =
   let clone_name = Printf.sprintf "%s0" test_dataset_name in
   common_clone_create test_snapshot_name clone_name;
   common_cleanup vdevs
+
+(* promote *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  let clone_name = Printf.sprintf "%s0" test_dataset_name in
+  common_clone_create test_snapshot_name clone_name;
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.promote handle clone_name with
+  | Left () -> ()
+  | Right (Some snapname, e) ->
+      Printf.eprintf "promote failed (conflicting snapshot %s)\n" snapname;
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "promote failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
