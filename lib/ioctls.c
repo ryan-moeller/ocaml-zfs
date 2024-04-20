@@ -1015,7 +1015,10 @@ caml_zfs_ioc_dataset_list_next(value handle, value name, value simple,
 		zc.zc_objset_stats.dds_creation_txg = 0;
 	}
 	caml_acquire_runtime_system();
-	if (err) {
+	if (err == ESRCH) {
+		ret = caml_alloc(1, 0);
+		Store_field(ret, 0, Val_none);
+	} else if (err) {
 		if (!zc.zc_simple) {
 			void *p = (void *)zc.zc_nvlist_dst;
 			free(p);
@@ -1038,7 +1041,7 @@ caml_zfs_ioc_dataset_list_next(value handle, value name, value simple,
 		}
 		Store_field(tuple, 3, caml_copy_int64(zc.zc_cookie));
 		ret = caml_alloc(1, 0);
-		Store_field(ret, 0, tuple);
+		Store_field(ret, 0, caml_alloc_some(tuple));
 	}
 	CAMLreturn (ret);
 }
@@ -1092,7 +1095,10 @@ caml_zfs_ioc_snapshot_list_next(value handle, value name, value simple,
 		zc.zc_objset_stats.dds_creation_txg = 0;
 	}
 	caml_acquire_runtime_system();
-	if (err) {
+	if (err == ESRCH) {
+		ret = caml_alloc(1, 0);
+		Store_field(ret, 0, Val_none);
+	} else if (err) {
 		if (!zc.zc_simple) {
 			void *p = (void *)zc.zc_nvlist_dst;
 			free(p);
@@ -1115,7 +1121,7 @@ caml_zfs_ioc_snapshot_list_next(value handle, value name, value simple,
 		}
 		Store_field(tuple, 3, caml_copy_int64(zc.zc_cookie));
 		ret = caml_alloc(1, 0);
-		Store_field(ret, 0, tuple);
+		Store_field(ret, 0, caml_alloc_some(tuple));
 	}
 	CAMLreturn (ret);
 }

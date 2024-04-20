@@ -233,7 +233,7 @@ module Zfs_ioctls = struct
     string ->
     bool ->
     int64 ->
-    (string * objset_stats * bytes option * int64, Unix.error) Either.t
+    ((string * objset_stats * bytes option * int64) option, Unix.error) Either.t
     = "caml_zfs_ioc_dataset_list_next"
 
   (* snapshot_list_next handle name simple cookie *)
@@ -242,7 +242,7 @@ module Zfs_ioctls = struct
     string ->
     bool ->
     int64 ->
-    (string * objset_stats * bytes option * int64, Unix.error) Either.t
+    ((string * objset_stats * bytes option * int64) option, Unix.error) Either.t
     = "caml_zfs_ioc_snapshot_list_next"
 
   (* set_prop handle name packed_props *)
