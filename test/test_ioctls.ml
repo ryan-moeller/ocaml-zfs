@@ -1121,3 +1121,19 @@ let () =
       Printf.eprintf "destroy failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
+
+(* rename *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  let newname = Printf.sprintf "%s0" test_dataset_name in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.rename handle test_dataset_name newname [||] with
+  | Left () -> ()
+  | Right (Some failed, e) ->
+      Printf.eprintf "rename failed on %s\n" failed;
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "rename failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
