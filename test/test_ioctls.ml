@@ -1367,3 +1367,57 @@ let () =
   common_cleanup vdevs
 
 (* recv is too complicated for testing here *)
+
+(* send_progress *)
+let () =
+  let vdevs = common_setup () in
+  common_dataset_create test_dataset_name;
+  common_snapshot_create test_snapshot_name;
+  (*
+   * Create a pipe and fill it up.  We want to block in the middle of
+   * the send operation.
+   *)
+  let pfd0, pfd1 = Unix.pipe () in
+  Unix.set_nonblock pfd0;
+  let buflen = 4096 (* standard page size *) in
+  let buffer = Bytes.create buflen in
+  (try
+     while buflen = Unix.single_write pfd0 buffer 0 buflen do
+       ()
+     done
+   with
+  | Unix.Unix_error (Unix.EWOULDBLOCK, _func, _param) -> ()
+  | Unix.Unix_error (Unix.EAGAIN, _func, _param) -> ());
+  Unix.clear_nonblock pfd0;
+  (* Start the send operation in a thread. *)
+  let sender () =
+    let objsetid = common_objset_id_lookup test_snapshot_name in
+    let handle = Zfs_ioctls.open_handle () in
+    match
+      Zfs_ioctls.send handle test_snapshot_name (Some pfd0) true objsetid None
+        false [||]
+    with
+    | Left None -> ()
+    | Right Unix.EPIPE -> ()
+    | Left (Some _estimate) -> failwith "send returned unexpected estimate"
+    | Right e ->
+        Printf.eprintf "send failed (send_progress)\n";
+        failwith @@ Unix.error_message e
+  in
+  let td = Domain.spawn sender in
+  (* Check the send progress. *)
+  Unix.sleep 1;
+  let handle = Zfs_ioctls.open_handle () in
+  let written, logical =
+    match Zfs_ioctls.send_progress handle test_snapshot_name pfd0 with
+    | Left sizes -> sizes
+    | Right e ->
+        Printf.eprintf "send_progress failed\n";
+        failwith @@ Unix.error_message e
+  in
+  Printf.printf "sent %Lu bytes (logical %Lu bytes)\n" written logical;
+  (* Clean up the sender thread. *)
+  Unix.close pfd1;
+  Unix.close pfd0;
+  Domain.join td;
+  common_cleanup vdevs
