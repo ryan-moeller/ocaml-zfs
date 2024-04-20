@@ -8,11 +8,11 @@ let test_dataset_name = Printf.sprintf "%s/testdataset" test_pool_name
 let test_snapshot_name = Printf.sprintf "%s@testsnapshot" test_dataset_name
 let test_mount_name = "testmnt"
 let test_file_name = "testfile"
+let test_property_name = "user:testproperty"
+let test_property_value = "testvalue"
 
 (*
 let test_bookmark_name = Printf.sprintf "%s#testbookmark" test_dataset_name
-let test_property_name = "user:testproperty"
-let test_property_value = "testvalue"
 let test_tag_name = "testtag"
 *)
 let test_vdev_name = "testdev"
@@ -1083,5 +1083,23 @@ let () =
   | Left () -> ()
   | Right e ->
       Printf.eprintf "set_fsacl failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* set_prop *)
+let () =
+  let vdevs = common_setup () in
+  let props = Nvlist.alloc () in
+  Nvlist.add_string props test_property_name test_property_value;
+  let packed_props = Nvlist.pack props Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.set_prop handle test_pool_name packed_props with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "set_prop failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "set_prop failed (without errors)\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
