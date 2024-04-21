@@ -642,6 +642,25 @@ let () =
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
 
+(* pool_scrub *)
+let () =
+  let vdevs = common_setup () in
+  let args = Nvlist.alloc () in
+  Nvlist.add_uint64 args "scan_type"
+  @@ Int64.of_int
+  @@ Util.int_of_pool_scan_func ScanScrub;
+  Nvlist.add_uint64 args "scan_command"
+  @@ Int64.of_int
+  @@ Util.int_of_pool_scrub_cmd ScrubNormal;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_scrub handle test_pool_name packed_args with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "pool_scrub failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
 (* vdev_add *)
 let () =
   let vdevs = common_setup () in
