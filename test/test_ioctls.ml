@@ -1,8 +1,6 @@
 open Nvpair
 open Zfs
 
-(* let feature_enabled = "enabled" *)
-
 let test_pool_name = "testpool"
 let test_dataset_name = Printf.sprintf "%s/testdataset" test_pool_name
 let test_snapshot_name = Printf.sprintf "%s@testsnapshot" test_dataset_name
@@ -1886,4 +1884,4 @@ let () =
   Printf.printf "fs waited=%s\n" (if waited then "true" else "false");
   common_cleanup vdevs
 
-(* TODO: change_key, load_key, unload_key *)
+(* load_key, unload_key, change_key are too complicated for these tests *)
