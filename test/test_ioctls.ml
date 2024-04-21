@@ -1867,3 +1867,21 @@ let () =
   let waited = Option.get @@ Nvlist.lookup_boolean_value result "wait_waited" in
   Printf.printf "waited=%s\n" (if waited then "true" else "false");
   common_cleanup vdevs
+
+(* wait_fs *)
+let () =
+  let vdevs = common_setup () in
+  let args = Nvlist.alloc () in
+  Nvlist.add_int32 args "wait_activity" 0l (* ZFS_WAIT_DELETEQ *);
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  let result =
+    match Zfs_ioctls.wait_fs handle test_pool_name packed_args with
+    | Left packed_result -> Nvlist.unpack packed_result
+    | Right e ->
+        Printf.eprintf "wait_fs failed\n";
+        failwith @@ Unix.error_message e
+  in
+  let waited = Option.get @@ Nvlist.lookup_boolean_value result "wait_waited" in
+  Printf.printf "fs waited=%s\n" (if waited then "true" else "false");
+  common_cleanup vdevs
