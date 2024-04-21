@@ -675,6 +675,30 @@ let () =
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
 
+(* pool_trim *)
+let () =
+  let vdevs = common_setup () in
+  let args = Nvlist.alloc () in
+  Nvlist.add_uint64 args "trim_command" 0L (* POOL_TRIM_START *);
+  let vdev = List.hd vdevs in
+  let label = Option.get @@ vdev_label_read vdev in
+  let guid = Option.get @@ Nvlist.lookup_uint64 label "guid" in
+  let trim_vdevs = Nvlist.alloc () in
+  Nvlist.add_uint64 trim_vdevs vdev guid;
+  Nvlist.add_nvlist args "trim_vdevs" trim_vdevs;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_trim handle test_pool_name packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "pool_trim failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "pool_trim failed (without errors)\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
 (* vdev_add *)
 let () =
   let vdevs = common_setup () in
