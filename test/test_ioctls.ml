@@ -1849,3 +1849,21 @@ let () =
   let value = Option.get @@ Nvlist.lookup_string bootenv "testvar" in
   assert (value = "testvalue");
   common_cleanup vdevs
+
+(* wait *)
+let () =
+  let vdevs = common_setup () in
+  let args = Nvlist.alloc () in
+  Nvlist.add_int32 args "wait_activity" 1l (* ZPOOL_WAIT_FREE *);
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  let result =
+    match Zfs_ioctls.wait handle test_pool_name packed_args with
+    | Left packed_result -> Nvlist.unpack packed_result
+    | Right e ->
+        Printf.eprintf "wait failed\n";
+        failwith @@ Unix.error_message e
+  in
+  let waited = Option.get @@ Nvlist.lookup_boolean_value result "wait_waited" in
+  Printf.printf "waited=%s\n" (if waited then "true" else "false");
+  common_cleanup vdevs
