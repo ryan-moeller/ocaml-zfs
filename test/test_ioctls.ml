@@ -848,6 +848,48 @@ let () =
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
 
+(* vdev_set_props *)
+(* vdev_get_props *)
+let () =
+  let vdevs = common_setup () in
+  (* Set a property on the vdev. *)
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
+  let guid = Option.get @@ Nvlist.lookup_uint64 label "guid" in
+  let args = Nvlist.alloc () in
+  Nvlist.add_uint64 args "vdevprops_set_vdev" guid;
+  let props = Nvlist.alloc () in
+  Nvlist.add_string props "comment" test_property_value;
+  Nvlist.add_nvlist args "vdevprops_set_props" props;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.vdev_set_props handle test_pool_name packed_args with
+  | Left () -> ()
+  | Right (Some packed_errors, e) ->
+      let _errors = Nvlist.unpack packed_errors in
+      Printf.eprintf "vdev_set_props failed (with errors)\n";
+      failwith @@ Unix.error_message e
+  | Right (None, e) ->
+      Printf.eprintf "vdev_set_props failed (without errors)\n";
+      failwith @@ Unix.error_message e);
+  (* Get the properties of the vdev. *)
+  let args = Nvlist.alloc () in
+  Nvlist.add_uint64 args "vdevprops_get_vdev" guid;
+  let props = Nvlist.alloc () in
+  Nvlist.add_boolean props "comment";
+  Nvlist.add_nvlist args "vdevprops_get_props" props;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let props =
+    match Zfs_ioctls.vdev_get_props handle test_pool_name packed_args with
+    | Left packed_props -> Nvlist.unpack packed_props
+    | Right e ->
+        Printf.eprintf "vdev_get_props failed\n";
+        failwith @@ Unix.error_message e
+  in
+  let prop = Option.get @@ Nvlist.lookup_nvlist props "comment" in
+  let value = Option.get @@ Nvlist.lookup_string prop "value" in
+  assert (value = test_property_value);
+  common_cleanup vdevs
+
 (* objset_stats *)
 let () =
   let vdevs = common_setup () in
