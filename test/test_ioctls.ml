@@ -661,6 +661,20 @@ let () =
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
 
+(* pool_sync *)
+let () =
+  let vdevs = common_setup () in
+  let args = Nvlist.alloc () in
+  Nvlist.add_boolean_value args "force" false;
+  let packed_args = Nvlist.pack args Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.pool_sync handle test_pool_name packed_args with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "pool_sync failed\n";
+      failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
 (* vdev_add *)
 let () =
   let vdevs = common_setup () in
