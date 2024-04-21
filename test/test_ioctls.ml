@@ -1885,3 +1885,5 @@ let () =
   let waited = Option.get @@ Nvlist.lookup_boolean_value result "wait_waited" in
   Printf.printf "fs waited=%s\n" (if waited then "true" else "false");
   common_cleanup vdevs
+
+(* TODO: change_key, load_key, unload_key *)
