@@ -1702,3 +1702,28 @@ let () =
         failwith @@ Unix.error_message e
   in
   common_cleanup vdevs
+
+(* set_bootenv *)
+(* get_bootenv *)
+let () =
+  let vdevs = common_setup () in
+  let bootenv = Nvlist.alloc () in
+  Nvlist.add_uint64 bootenv "version" 1L (* VB_NVLIST *);
+  Nvlist.add_string bootenv "testvar" "testvalue";
+  let packed_bootenv = Nvlist.pack bootenv Nvlist.Native in
+  let handle = Zfs_ioctls.open_handle () in
+  (match Zfs_ioctls.set_bootenv handle test_pool_name packed_bootenv with
+  | Left () -> ()
+  | Right e ->
+      Printf.eprintf "set_bootenv failed\n";
+      failwith @@ Unix.error_message e);
+  let bootenv =
+    match Zfs_ioctls.get_bootenv handle test_pool_name with
+    | Left packed_bootenv -> Nvlist.unpack packed_bootenv
+    | Right e ->
+        Printf.eprintf "get_bootenv failed\n";
+        failwith @@ Unix.error_message e
+  in
+  let value = Option.get @@ Nvlist.lookup_string bootenv "testvar" in
+  assert (value = "testvalue");
+  common_cleanup vdevs
