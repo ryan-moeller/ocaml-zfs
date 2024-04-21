@@ -1,6 +1,11 @@
 open Nvpair
 open Zfs
 
+let () =
+  if Unix.getuid () != 0 then (
+    Printf.eprintf "must be root to run these tests\n";
+    exit 1)
+
 let test_pool_name = "testpool"
 let test_dataset_name = Printf.sprintf "%s/testdataset" test_pool_name
 let test_snapshot_name = Printf.sprintf "%s@testsnapshot" test_dataset_name
