@@ -569,7 +569,7 @@ module Zfs_ioctls = struct
     = "caml_zfs_ioc_get_bookmark_props"
 
   (* wait handle name packed_args *)
-  external wait : handle -> string -> (bytes, Unix.error) Either.t
+  external wait : handle -> string -> bytes -> (bytes, Unix.error) Either.t
     = "caml_zfs_ioc_wait"
 
   (* wait_fs handle name packed_args *)
