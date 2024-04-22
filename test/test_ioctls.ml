@@ -168,7 +168,7 @@ let common_cleanup vdevs =
   common_cleanup_vdevs vdevs
 
 let common_get_config vdevs =
-  let label = Option.get @@ vdev_label_read (List.hd vdevs) in
+  let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
   let conf = Nvlist.alloc () in
   let children = Option.get @@ Nvlist.lookup_uint64 label "vdev_children" in
   Nvlist.add_uint64 conf "vdev_children" children;
