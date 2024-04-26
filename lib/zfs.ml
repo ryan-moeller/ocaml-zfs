@@ -1,4 +1,6 @@
 open Types
+module Types = Types
+module Util = Util
 
 module Zfs_ioctls = struct
   type handle
