@@ -1,5 +1,6 @@
 open Nvpair
 open Zfs
+open Zfs.Types
 
 let () =
   if Unix.getuid () != 0 then (
