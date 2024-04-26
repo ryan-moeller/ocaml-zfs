@@ -119,8 +119,7 @@ type attributes = {
 }
 
 let attributes = function
-  | Inval -> failwith "not a valid property"
-  | Userprop -> failwith "not a valid property"
+  | Inval | Userprop -> failwith "not a valid property"
   | Allocated ->
       {
         name = "allocated";
