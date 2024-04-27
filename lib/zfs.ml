@@ -1,6 +1,9 @@
 open Types
 module Types = Types
 module Util = Util
+module Vdev_prop = Vdev_prop
+module Zfs_prop = Zfs_prop
+module Zpool_prop = Zpool_prop
 
 module Zfs_ioctls = struct
   type handle
