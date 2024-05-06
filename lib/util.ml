@@ -8,6 +8,8 @@ external int_of_pool_scan_func : pool_scan_func -> int
 external int_of_pool_scrub_cmd : pool_scrub_cmd -> int
   = "caml_zfs_util_int_of_pool_scrub_cmd"
 
+external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
+
 let nicestrtonum s =
   let shiftamt suffix =
     match String.uppercase_ascii suffix with
