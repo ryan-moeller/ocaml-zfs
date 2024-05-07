@@ -129,8 +129,8 @@ let load_compat compat =
         if st.st_size < 1 || st.st_size > 16384 then None
         else
           let ic = Unix.in_channel_of_descr fd in
-          let contents = really_input_string ic st.st_size in
-          String.split_on_char '\n' contents
+          really_input_string ic st.st_size
+          |> String.split_on_char '\n'
           |> List.map (String.split_on_char '#')
           |> List.map List.hd
           |> List.concat_map (Str.split (Str.regexp "[, \t][ \t]*"))
