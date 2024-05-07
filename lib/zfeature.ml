@@ -86,6 +86,8 @@ let of_string = function
   | "zstd_compress" -> Zstd_compress
   | _ -> None
 
+let of_propname propname = Scanf.sscanf_opt propname "feature@%s" of_string
+
 type attributes = {
   name : string;
   guid : string;
