@@ -570,3 +570,48 @@ let attributes = function
       }
 
 let to_string prop = (attributes prop).name
+
+let all_features =
+  [|
+    Allocation_classes;
+    Async_destroy;
+    Avz_v2;
+    Blake3;
+    Block_cloning;
+    Bookmark_v2;
+    Bookmark_written;
+    Bookmarks;
+    Device_rebuild;
+    Device_removal;
+    Draid;
+    Edonr;
+    Embedded_data;
+    Empty_bpobj;
+    Enabled_txg;
+    Encryption;
+    Extensible_dataset;
+    Fs_ss_limit;
+    Head_errlog;
+    Hole_birth;
+    Large_blocks;
+    Large_dnode;
+    Livelist;
+    Log_spacemap;
+    Lz4_compress;
+    Multi_vdev_crash_dump;
+    Obsolete_counts;
+    Pool_checkpoint;
+    Project_quota;
+    Raidz_expansion;
+    Redacted_datasets;
+    Redaction_bookmarks;
+    Redaction_list_spill;
+    Resilver_defer;
+    Sha512;
+    Skein;
+    Spacemap_histogram;
+    Spacemap_v2;
+    Userobj_accounting;
+    Zilsaxattr;
+    Zstd_compress;
+  |]
