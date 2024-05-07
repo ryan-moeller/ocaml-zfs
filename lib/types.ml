@@ -94,4 +94,10 @@ type userquota_prop =
 
 type useracct = { domain : string; rid : int; space : int64 }
 type stat = { gen : int64; mode : int64; links : int64; ctime : int64 * int64 }
-type zfs_error = EzfsInvalidName | EzfsBadProp | EzfsPropReadonly
+
+type zfs_error =
+  | EzfsInvalidName
+  | EzfsBadProp
+  | EzfsPropReadonly
+  | EzfsBadVersion
+  | EzfsBadPath
