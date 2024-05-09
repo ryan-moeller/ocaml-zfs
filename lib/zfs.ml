@@ -1,5 +1,6 @@
 open Types
 module Types = Types
+module Userquota_prop = Userquota_prop
 module Util = Util
 module Vdev_prop = Vdev_prop
 module Zfs_prop = Zfs_prop
@@ -289,7 +290,7 @@ module Zfs_ioctls = struct
   external userspace_one :
     handle ->
     string ->
-    userquota_prop ->
+    Userquota_prop.t ->
     string ->
     int64 ->
     (int64, Unix.error) Result.t = "caml_zfs_ioc_userspace_one"
@@ -298,7 +299,7 @@ module Zfs_ioctls = struct
   external userspace_many :
     handle ->
     string ->
-    userquota_prop ->
+    Userquota_prop.t ->
     int ->
     int64 ->
     (int64 * useracct array, Unix.error) Result.t

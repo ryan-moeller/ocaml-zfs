@@ -1419,9 +1419,7 @@ let () =
   let vdevs = common_setup () in
   let handle = Zfs_ioctls.open_handle () in
   let space =
-    match
-      Zfs_ioctls.userspace_one handle test_pool_name UserquotaPropUserused "" 0L
-    with
+    match Zfs_ioctls.userspace_one handle test_pool_name Userused "" 0L with
     | Ok space -> space
     | Error e ->
         Printf.eprintf "userspace_one failed\n";
@@ -1434,9 +1432,7 @@ let () =
 let () =
   let vdevs = common_setup () in
   let handle = Zfs_ioctls.open_handle () in
-  (match
-     Zfs_ioctls.userspace_many handle test_pool_name UserquotaPropUserused 8 0L
-   with
+  (match Zfs_ioctls.userspace_many handle test_pool_name Userused 8 0L with
   | Ok (_cookie, useraccts) ->
       let nuseraccts = Array.length useraccts in
       Printf.printf "got %d useracct record(s)\n" nuseraccts

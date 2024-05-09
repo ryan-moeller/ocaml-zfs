@@ -78,20 +78,6 @@ type zbookmark_phys = {
   blkid : int64;
 }
 
-type userquota_prop =
-  | UserquotaPropUserused
-  | UserquotaPropUserquota
-  | UserquotaPropGroupused
-  | UserquotaPropGroupquota
-  | UserquotaPropUserobjused
-  | UserquotaPropUserobjquota
-  | UserquotaPropGroupobjused
-  | UserquotaPropGroupobjquota
-  | UserquotaPropProjectused
-  | UserquotaPropProjectquota
-  | UserquotaPropProjectobjused
-  | UserquotaPropProjectobjquota
-
 type useracct = { domain : string; rid : int; space : int64 }
 type stat = { gen : int64; mode : int64; links : int64; ctime : int64 * int64 }
 
