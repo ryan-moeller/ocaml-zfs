@@ -29,6 +29,16 @@ type passwd = {
 external getpwnam : string -> (passwd option, Unix.error) result
   = "caml_zfs_util_getpwnam"
 
+type group = {
+  name : string;
+  passwd : string;
+  gid : int;
+  members : string array;
+}
+
+external getgrnam : string -> (group option, Unix.error) result
+  = "caml_zfs_util_getgrnam"
+
 let nicestrtonum s =
   let shiftamt suffix =
     match String.uppercase_ascii suffix with

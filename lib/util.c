@@ -1,5 +1,6 @@
 #include <sys/param.h>
 #include <sys/sysctl.h>
+#include <grp.h>
 #include <pwd.h>
 #include <unistd.h>
 #include <caml/mlvalues.h>
@@ -86,6 +87,36 @@ caml_zfs_util_getpwnam(value name)
 		Store_field(record, 7, caml_copy_string(pw->pw_dir));
 		Store_field(record, 8, caml_copy_string(pw->pw_shell));
 		Store_field(record, 9, caml_copy_int64(pw->pw_expire));
+		ret = caml_alloc(1, 0);
+		Store_field(ret, 0, caml_alloc_some(record));
+	}
+	CAMLreturn (ret);
+}
+
+CAMLprim value
+caml_zfs_util_getgrnam(value name)
+{
+	CAMLparam1 (name);
+	CAMLlocal2 (ret, record);
+	char buf[2048];
+	struct group grp = {"\0"};
+	struct group *gr;
+	int err;
+
+	err = getgrnam_r(String_val(name), &grp, buf, sizeof buf, &gr);
+	if (err != 0) {
+		ret = caml_alloc(1, 1);
+		Store_field(ret, 0, caml_unix_error_of_code(err));
+	} else if (gr == NULL) {
+		ret = caml_alloc(1, 0);
+		Store_field(ret, 0, Val_none);
+	} else {
+		record = caml_alloc_tuple(4);
+		Store_field(record, 0, caml_copy_string(gr->gr_name));
+		Store_field(record, 1, caml_copy_string(gr->gr_passwd));
+		Store_field(record, 2, Val_int(gr->gr_gid));
+		Store_field(record, 3,
+		    caml_copy_string_array((const char **)gr->gr_mem));
 		ret = caml_alloc(1, 0);
 		Store_field(ret, 0, caml_alloc_some(record));
 	}
