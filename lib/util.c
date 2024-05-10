@@ -1,7 +1,9 @@
 #include <sys/param.h>
+#include <sys/sysctl.h>
 #include <unistd.h>
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
+#include <caml/fail.h>
 #include <caml/memory.h>
 
 CAMLprim value
@@ -33,4 +35,18 @@ caml_zfs_util_get_system_hostid(value unit)
 
 	hostid = gethostid();
 	CAMLreturn (caml_copy_int32(hostid));
+}
+
+CAMLprim value
+caml_zfs_util_getzoneid(value unit)
+{
+	CAMLparam1 (unit);
+	size_t size;
+	int jid;
+
+	size = sizeof jid;
+	if (sysctlbyname("security.jail.param.jid", &jid, &size, NULL, 0) == -1) {
+		caml_failwith("sysctlbyname");
+	}
+	CAMLreturn (Val_int(jid));
 }

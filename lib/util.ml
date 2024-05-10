@@ -9,6 +9,7 @@ external int_of_pool_scrub_cmd : pool_scrub_cmd -> int
   = "caml_zfs_util_int_of_pool_scrub_cmd"
 
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
+external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
 
 let nicestrtonum s =
   let shiftamt suffix =
