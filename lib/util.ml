@@ -11,6 +11,24 @@ external int_of_pool_scrub_cmd : pool_scrub_cmd -> int
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
 external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
 
+type time = int64
+
+type passwd = {
+  name : string;
+  passwd : string;
+  uid : int;
+  gid : int;
+  change : time;
+  access_class : string;
+  gecos : string;
+  dir : string;
+  shell : string;
+  expire : time;
+}
+
+external getpwnam : string -> (passwd option, Unix.error) result
+  = "caml_zfs_util_getpwnam"
+
 let nicestrtonum s =
   let shiftamt suffix =
     match String.uppercase_ascii suffix with
