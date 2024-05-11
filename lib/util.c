@@ -31,9 +31,13 @@ CAMLprim value
 caml_zfs_util_get_system_hostid(value unit)
 {
 	CAMLparam1 (unit);
-	long hostid;
+	unsigned long hostid;
+	size_t size;
 
-	hostid = gethostid();
+	size = sizeof hostid;
+	if (sysctlbyname("kern.hostid", &hostid, &size, NULL, 0) == -1) {
+		caml_failwith("sysctlbyname");
+	}
 	CAMLreturn (caml_copy_int32(hostid));
 }
 
