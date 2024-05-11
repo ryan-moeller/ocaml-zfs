@@ -96,47 +96,12 @@ let common_pack_root_vdevs vdevs =
 
 let common_pack_all_features () =
   let props = Nvlist.alloc () in
-  Nvlist.add_uint64 props "feature@async_destroy" 0L;
-  Nvlist.add_uint64 props "feature@empty_bpobj" 0L;
-  Nvlist.add_uint64 props "feature@lz4_compress" 0L;
-  Nvlist.add_uint64 props "feature@multi_vdev_crash_dump" 0L;
-  Nvlist.add_uint64 props "feature@spacemap_histogram" 0L;
-  Nvlist.add_uint64 props "feature@enabled_txg" 0L;
-  Nvlist.add_uint64 props "feature@hole_birth" 0L;
-  Nvlist.add_uint64 props "feature@zpool_checkpoint" 0L;
-  Nvlist.add_uint64 props "feature@spacemap_v2" 0L;
-  Nvlist.add_uint64 props "feature@extensible_dataset" 0L;
-  Nvlist.add_uint64 props "feature@bookmarks" 0L;
-  Nvlist.add_uint64 props "feature@filesystem_limits" 0L;
-  Nvlist.add_uint64 props "feature@embedded_data" 0L;
-  Nvlist.add_uint64 props "feature@livelist" 0L;
-  Nvlist.add_uint64 props "feature@log_spacemap" 0L;
-  Nvlist.add_uint64 props "feature@large_blocks" 0L;
-  Nvlist.add_uint64 props "feature@large_dnode" 0L;
-  Nvlist.add_uint64 props "feature@sha512" 0L;
-  Nvlist.add_uint64 props "feature@skein" 0L;
-  Nvlist.add_uint64 props "feature@edonr" 0L;
-  Nvlist.add_uint64 props "feature@redaction_bookmarks" 0L;
-  Nvlist.add_uint64 props "feature@redacted_datasets" 0L;
-  Nvlist.add_uint64 props "feature@bookmark_written" 0L;
-  Nvlist.add_uint64 props "feature@device_removal" 0L;
-  Nvlist.add_uint64 props "feature@obsolete_counts" 0L;
-  Nvlist.add_uint64 props "feature@userobj_accounting" 0L;
-  Nvlist.add_uint64 props "feature@bookmark_v2" 0L;
-  Nvlist.add_uint64 props "feature@encryption" 0L;
-  Nvlist.add_uint64 props "feature@project_quota" 0L;
-  Nvlist.add_uint64 props "feature@allocation_classes" 0L;
-  Nvlist.add_uint64 props "feature@resilver_defer" 0L;
-  Nvlist.add_uint64 props "feature@device_rebuild" 0L;
-  Nvlist.add_uint64 props "feature@zstd_compress" 0L;
-  Nvlist.add_uint64 props "feature@draid" 0L;
-  Nvlist.add_uint64 props "feature@zilsaxattr" 0L;
-  Nvlist.add_uint64 props "feature@head_errlog" 0L;
-  Nvlist.add_uint64 props "feature@blake3" 0L;
-  Nvlist.add_uint64 props "feature@block_cloning" 0L;
-  Nvlist.add_uint64 props "feature@vdev_zaps_v2" 0L;
-  Nvlist.add_uint64 props "feature@redaction_list_spill" 0L;
-  Nvlist.add_uint64 props "feature@raidz_expansion" 0L;
+  Array.iter
+    (fun feature ->
+      let attrs = Zfeature.attributes feature in
+      let name = Printf.sprintf "feature@%s" attrs.name in
+      Nvlist.add_uint64 props name 0L)
+    Zfeature.all_features;
   Nvlist.pack props Nvlist.Native
 
 let common_zpool_create vdevs =
