@@ -140,18 +140,18 @@ let common_pack_all_features () =
   Nvlist.pack props Nvlist.Native
 
 let common_zpool_create vdevs =
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let config = common_pack_root_vdevs vdevs in
   let props = common_pack_all_features () in
-  match Zfs_ioctls.pool_create handle test_pool_name config (Some props) with
+  match Ioctls.pool_create handle test_pool_name config (Some props) with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_create failed\n";
       failwith @@ Unix.error_message e
 
 let common_zpool_destroy () =
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.pool_destroy handle test_pool_name "deleting test pool" with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.pool_destroy handle test_pool_name "deleting test pool" with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_destroy failed\n";
@@ -204,8 +204,8 @@ let common_get_config vdevs =
   Nvlist.add_uint32 policy "load-rewind-policy" 1l;
   Nvlist.add_nvlist conf "load-policy" policy;
   let packed_conf = Nvlist.pack conf Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.pool_tryimport handle packed_conf with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.pool_tryimport handle packed_conf with
   | Ok packed_config -> packed_config
   | Error e ->
       Printf.eprintf "pool_tryimport failed\n";
@@ -217,9 +217,9 @@ let common_vdev_attach vdevs name =
   let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
   let path = vdev_file_create name in
   let packed_config = common_pack_root_vdevs [ path ] in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   (match
-     Zfs_ioctls.vdev_attach handle test_pool_name guid packed_config false false
+     Ioctls.vdev_attach handle test_pool_name guid packed_config false false
    with
   | Ok () -> ()
   | Error e ->
@@ -231,8 +231,8 @@ let common_dataset_create name =
   let args = Nvlist.alloc () in
   Nvlist.add_int32 args "type" 2l (* ObjsetTypeZfs *);
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.create handle name packed_args with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.create handle name packed_args with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "create failed\n";
@@ -245,8 +245,8 @@ let common_snapshot_create name =
   Nvlist.add_boolean snaps name;
   Nvlist.add_nvlist args "snaps" snaps;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.snapshot handle pool packed_args with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.snapshot handle pool packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       ignore @@ Nvlist.unpack packed_errors;
@@ -260,8 +260,8 @@ let common_clone_create origin name =
   let args = Nvlist.alloc () in
   Nvlist.add_string args "origin" origin;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.clone handle name packed_args with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.clone handle name packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -275,8 +275,8 @@ let common_bookmark_create pool snap name =
   let args = Nvlist.alloc () in
   Nvlist.add_string args name snap;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.bookmark handle pool packed_args with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.bookmark handle pool packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -292,8 +292,8 @@ let common_hold_create snap tag =
   Nvlist.add_string holds snap tag;
   Nvlist.add_nvlist args "holds" holds;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.hold handle test_pool_name packed_args with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.hold handle test_pool_name packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -304,8 +304,8 @@ let common_hold_create snap tag =
       failwith @@ Unix.error_message e
 
 let common_stats_get name =
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.objset_stats handle name false with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.objset_stats handle name false with
   | Ok (_stats, Some packed_stats) -> Nvlist.unpack packed_stats
   | Ok (_stats, None) -> failwith "objset_stats didn't return nvlist"
   | Error e ->
@@ -341,16 +341,16 @@ let common_inject_fault vdevs =
       dvas = 0l;
     }
   in
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.inject_fault handle test_pool_name record 0 with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.inject_fault handle test_pool_name record 0 with
   | Ok fault_id -> fault_id
   | Error e ->
       Printf.eprintf "inject_fault failed\n";
       failwith @@ Unix.error_message e
 
 let common_clear_fault fault_id =
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.clear_fault handle fault_id with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.clear_fault handle fault_id with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "clear_fault failed\n";
@@ -365,11 +365,11 @@ let () =
 (* pool_set_props *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let props = Nvlist.alloc () in
   Nvlist.add_string props "bootfs" test_pool_name;
   let packed = Nvlist.pack props Nvlist.Native in
-  (match Zfs_ioctls.pool_set_props handle test_pool_name packed with
+  (match Ioctls.pool_set_props handle test_pool_name packed with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_set_props failed\n";
@@ -379,8 +379,8 @@ let () =
 (* pool_get_props *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_get_props handle test_pool_name with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_get_props handle test_pool_name with
   | Ok packed_props ->
       let props = Nvlist.unpack packed_props in
       ignore props
@@ -392,9 +392,9 @@ let () =
 (* pool_export *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   (match
-     Zfs_ioctls.pool_export handle test_pool_name false false
+     Ioctls.pool_export handle test_pool_name false false
        (Some "exporting test pool")
    with
   | Ok () -> ()
@@ -406,9 +406,9 @@ let () =
 (* pool_tryimport *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   (match
-     Zfs_ioctls.pool_export handle test_pool_name false false
+     Ioctls.pool_export handle test_pool_name false false
        (Some "exporting test pool")
    with
   | Ok () -> ()
@@ -424,9 +424,9 @@ let () =
 (* pool_import *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   (match
-     Zfs_ioctls.pool_export handle test_pool_name false false
+     Ioctls.pool_export handle test_pool_name false false
        (Some "exporting test pool")
    with
   | Ok () -> ()
@@ -438,7 +438,7 @@ let () =
   let guid = Option.get @@ Nvlist.lookup_uint64 config "pool_guid" in
   Printf.printf "pool guid: %Lu\n" guid;
   (match
-     Zfs_ioctls.pool_import handle test_pool_name guid packed_config None
+     Ioctls.pool_import handle test_pool_name guid packed_config None
        [| ImportOnly |]
    with
   | Ok packed_conf ->
@@ -453,8 +453,8 @@ let () =
 (* pool_configs *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_configs handle 0L with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_configs handle 0L with
   | Ok None -> ()
   | Ok (Some (ns_gen, packed_configs)) ->
       Printf.printf "got configs for namespace generation: %Lu\n" ns_gen;
@@ -476,8 +476,8 @@ let () =
 (* pool_stats *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_stats handle test_pool_name with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_stats handle test_pool_name with
   | Ok packed_config ->
       let config = Nvlist.unpack packed_config in
       ignore config
@@ -492,13 +492,13 @@ let () =
 (* pool_scan *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_scan handle test_pool_name ScanScrub ScrubNormal with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_scan handle test_pool_name ScanScrub ScrubNormal with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_scan failed\n";
       failwith @@ Unix.error_message e);
-  (match Zfs_ioctls.pool_scan handle test_pool_name ScanNone ScrubNormal with
+  (match Ioctls.pool_scan handle test_pool_name ScanNone ScrubNormal with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_scan failed (ScanNone)\n";
@@ -508,8 +508,8 @@ let () =
 (* pool_freeze *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_freeze handle test_pool_name with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_freeze handle test_pool_name with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_freeze failed\n";
@@ -519,8 +519,8 @@ let () =
 (* pool_upgrade *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_upgrade handle test_pool_name 5000L with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_upgrade handle test_pool_name 5000L with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_upgrade failed\n";
@@ -530,9 +530,9 @@ let () =
 (* pool_get_history *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let rec history_loop offset =
-    match Zfs_ioctls.pool_get_history handle test_pool_name offset with
+    match Ioctls.pool_get_history handle test_pool_name offset with
     | Ok None -> ()
     | Ok (Some historybuf) ->
         let historybuf_len = Bytes.length historybuf in
@@ -573,8 +573,8 @@ let () =
 (* pool_reguid *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_reguid handle test_pool_name with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_reguid handle test_pool_name with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_reguid failed\n";
@@ -584,8 +584,8 @@ let () =
 (* pool_reopen *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_reopen handle test_pool_name None with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_reopen handle test_pool_name None with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_reopen failed\n";
@@ -595,8 +595,8 @@ let () =
 (* pool_checkpoint *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_checkpoint handle test_pool_name with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_checkpoint handle test_pool_name with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_checkpoint failed\n";
@@ -606,13 +606,13 @@ let () =
 (* pool_discard_checkpoint *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_checkpoint handle test_pool_name with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_checkpoint handle test_pool_name with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_checkpoint failed (pool_discard_checkpoint)\n";
       failwith @@ Unix.error_message e);
-  (match Zfs_ioctls.pool_discard_checkpoint handle test_pool_name with
+  (match Ioctls.pool_discard_checkpoint handle test_pool_name with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_discard_checkpoint failed\n";
@@ -633,8 +633,8 @@ let () =
   Nvlist.add_uint64 args "initialize_command" 0L (* POOL_INITIALIZE_START *);
   Nvlist.add_nvlist args "initialize_vdevs" guids;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_initialize handle test_pool_name packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_initialize handle test_pool_name packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let errors = Nvlist.unpack packed_errors in
@@ -657,8 +657,8 @@ let () =
   @@ Int64.of_int
   @@ Util.int_of_pool_scrub_cmd ScrubNormal;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_scrub handle test_pool_name packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_scrub handle test_pool_name packed_args with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_scrub failed\n";
@@ -671,8 +671,8 @@ let () =
   let args = Nvlist.alloc () in
   Nvlist.add_boolean_value args "force" false;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_sync handle test_pool_name packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_sync handle test_pool_name packed_args with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_sync failed\n";
@@ -691,8 +691,8 @@ let () =
   Nvlist.add_uint64 trim_vdevs vdev guid;
   Nvlist.add_nvlist args "trim_vdevs" trim_vdevs;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.pool_trim handle test_pool_name packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_trim handle test_pool_name packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -708,8 +708,8 @@ let () =
   let vdevs = common_setup () in
   let vdev = vdev_file_create @@ Printf.sprintf "%s0" test_vdev_name in
   let packed_conf = common_pack_root_vdevs [ vdev ] in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.vdev_add handle test_pool_name packed_conf false with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.vdev_add handle test_pool_name packed_conf false with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "vdev_add failed\n";
@@ -726,8 +726,8 @@ let () =
   let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
   let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
   let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.vdev_remove handle test_pool_name guid with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.vdev_remove handle test_pool_name guid with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "vdev_remove failed\n";
@@ -744,13 +744,13 @@ let () =
   let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
   let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
   let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.vdev_remove handle test_pool_name guid with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.vdev_remove handle test_pool_name guid with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "vdev_remove failed (vdev_remove_cancel)\n";
       failwith @@ Unix.error_message e);
-  (match Zfs_ioctls.vdev_remove_cancel handle test_pool_name with
+  (match Ioctls.vdev_remove_cancel handle test_pool_name with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "vdev_remove_cancel failed\n";
@@ -764,9 +764,9 @@ let () =
   let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
   let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
   let flags = 11L (* VDEV_AUX_ERR_EXCEEDED (flags not always vdev_aux_t) *) in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   (match
-     Zfs_ioctls.vdev_set_state handle test_pool_name guid VdevStateFaulted flags
+     Ioctls.vdev_set_state handle test_pool_name guid VdevStateFaulted flags
    with
   (* returns VdevStateUnknown except when assigning VdevStateOnline *)
   | Ok VdevStateUnknown -> ()
@@ -807,8 +807,8 @@ let () =
   let vdevs = common_vdev_attach vdevs @@ Printf.sprintf "%s0" test_vdev_name in
   Unix.sleep 1;
   (* Detach the vdev. *)
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.vdev_detach handle test_pool_name guid with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.vdev_detach handle test_pool_name guid with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "vdev_detach failed\n";
@@ -835,9 +835,9 @@ let () =
   Nvlist.add_nvlist conf "vdev_tree" root;
   let packed_conf = Nvlist.pack conf Nvlist.Native in
   (* Split the pool. *)
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   (match
-     Zfs_ioctls.vdev_split handle test_pool_name newname packed_conf None true
+     Ioctls.vdev_split handle test_pool_name newname packed_conf None true
    with
   | Ok () -> ()
   | Error e ->
@@ -853,8 +853,8 @@ let () =
   let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
   let path = Option.get @@ Nvlist.lookup_string vdev "path" in
   (* Not actually a different path, but good enough for a test. *)
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.vdev_setpath handle test_pool_name guid path with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.vdev_setpath handle test_pool_name guid path with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "vdev_setpath failed\n";
@@ -867,8 +867,8 @@ let () =
   let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
   let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
   let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.vdev_setfru handle test_pool_name guid "test" with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.vdev_setfru handle test_pool_name guid "test" with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "vdev_setfru failed\n";
@@ -888,8 +888,8 @@ let () =
   Nvlist.add_string props "comment" test_property_value;
   Nvlist.add_nvlist args "vdevprops_set_props" props;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.vdev_set_props handle test_pool_name packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.vdev_set_props handle test_pool_name packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -906,7 +906,7 @@ let () =
   Nvlist.add_nvlist args "vdevprops_get_props" props;
   let packed_args = Nvlist.pack args Nvlist.Native in
   let props =
-    match Zfs_ioctls.vdev_get_props handle test_pool_name packed_args with
+    match Ioctls.vdev_get_props handle test_pool_name packed_args with
     | Ok packed_props -> Nvlist.unpack packed_props
     | Error e ->
         Printf.eprintf "vdev_get_props failed\n";
@@ -926,9 +926,9 @@ let () =
 (* objset_zplprops *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let props =
-    match Zfs_ioctls.objset_zplprops handle test_pool_name with
+    match Ioctls.objset_zplprops handle test_pool_name with
     | Ok packed_zplprops -> Nvlist.unpack packed_zplprops
     | Error e ->
         Printf.eprintf "objset_zplprops failed\n";
@@ -944,9 +944,9 @@ let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
   let dsobj = common_objset_id_lookup test_dataset_name in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let name =
-    match Zfs_ioctls.dsobj_to_dsname handle test_pool_name dsobj with
+    match Ioctls.dsobj_to_dsname handle test_pool_name dsobj with
     | Ok name -> name
     | Error e ->
         Printf.eprintf "dsobj_to_dsname failed\n";
@@ -958,8 +958,8 @@ let () =
 (* next_obj *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.next_obj handle test_pool_name 0L with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.next_obj handle test_pool_name 0L with
   | Ok next_opt -> ignore next_opt
   | Error e ->
       Printf.eprintf "next_obj failed\n";
@@ -975,8 +975,8 @@ let () =
   common_snapshot_create snap0;
   common_snapshot_create snap1;
   let _pfd0, pfd1 = Unix.pipe () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.diff handle snap1 snap0 pfd1 with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.diff handle snap1 snap0 pfd1 with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "diff failed\n";
@@ -1010,9 +1010,9 @@ let () =
   (* Corrupt the file by overwriting some of the data. *)
   let umount_cmd = Printf.sprintf "/sbin/umount -f %s" test_mount_name in
   assert (Unix.WEXITED 0 = Unix.system umount_cmd);
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   (match
-     Zfs_ioctls.pool_export handle test_pool_name false false
+     Ioctls.pool_export handle test_pool_name false false
        (Some "exporting test pool")
    with
   | Ok () -> ()
@@ -1049,7 +1049,7 @@ let () =
   let guid = Option.get @@ Nvlist.lookup_uint64 config "pool_guid" in
   let config =
     match
-      Zfs_ioctls.pool_import handle test_pool_name guid packed_config None
+      Ioctls.pool_import handle test_pool_name guid packed_config None
         [| ImportOnly |]
     with
     | Ok packed_config -> Nvlist.unpack packed_config
@@ -1067,7 +1067,7 @@ let () =
   Unix.close fd;
   (* Read the error log. *)
   let error_log =
-    match Zfs_ioctls.error_log handle test_pool_name with
+    match Ioctls.error_log handle test_pool_name with
     | Ok entries -> entries
     | Error e ->
         Printf.eprintf "error_log failed\n";
@@ -1079,7 +1079,7 @@ let () =
   Printf.printf "objset=%Lu object=%Lu level=%Ld blkid=%Lu\n" zb.objset zb.obj
     zb.level zb.blkid;
   let obj_path =
-    match Zfs_ioctls.obj_to_path handle test_pool_name zb.obj with
+    match Ioctls.obj_to_path handle test_pool_name zb.obj with
     | Ok path -> path
     | Error e ->
         Printf.eprintf "obj_to_path failed\n";
@@ -1116,8 +1116,8 @@ let () =
   common_snapshot_create snap1;
   (* Do a diff. *)
   let pfd0, pfd1 = Unix.pipe () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.diff handle snap1 snap0 pfd1 with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.diff handle snap1 snap0 pfd1 with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "diff failed (obj_to_stats)\n";
@@ -1148,7 +1148,7 @@ let () =
       let num_objs = Int64.to_int @@ Int64.sub ddr_last ddr_first in
       Printf.printf "num_objs=%d\n" num_objs;
       Seq.iter (fun obj ->
-          match Zfs_ioctls.obj_to_stats handle snap1 obj with
+          match Ioctls.obj_to_stats handle snap1 obj with
           | Ok (path, stats) ->
               Printf.printf "\tobj=0x%Lx gen=0x%Lu path=%s\n" obj stats.gen path
           | Error _e -> ())
@@ -1172,9 +1172,9 @@ let () =
 let () =
   let vdevs = common_setup () in
   let fault_id = common_inject_fault vdevs in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let next_id, pool, _record =
-    match Zfs_ioctls.inject_list_next handle 0L with
+    match Ioctls.inject_list_next handle 0L with
     | Ok (Some stuff) -> stuff
     | Ok None -> failwith "inject_list_next came back empty\n"
     | Error e ->
@@ -1190,9 +1190,9 @@ let () =
 let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let dataset, _stats, packed_props_opt, _cookie =
-    match Zfs_ioctls.dataset_list_next handle test_pool_name false 0L with
+    match Ioctls.dataset_list_next handle test_pool_name false 0L with
     | Ok (Some results) -> results
     | Ok None -> failwith "dataset_list_next came back empty\n"
     | Error e ->
@@ -1208,9 +1208,9 @@ let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
   common_snapshot_create test_snapshot_name;
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let snapshot, _stats, packed_props_opt, _cookie =
-    match Zfs_ioctls.snapshot_list_next handle test_dataset_name false 0L with
+    match Ioctls.snapshot_list_next handle test_dataset_name false 0L with
     | Ok (Some results) -> results
     | Ok None -> failwith "snapshot_list_next came back empty\n"
     | Error e ->
@@ -1224,9 +1224,9 @@ let () =
 (* get_fsacl *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let _fsacl =
-    match Zfs_ioctls.get_fsacl handle test_pool_name with
+    match Ioctls.get_fsacl handle test_pool_name with
     | Ok packed_fsacl -> Nvlist.unpack packed_fsacl
     | Error e ->
         Printf.eprintf "get_fsacl failed\n";
@@ -1245,8 +1245,8 @@ let () =
   Nvlist.add_nvlist acl "ed$" perms;
   Nvlist.add_nvlist acl "Ed$" perms;
   let packed_acl = Nvlist.pack acl Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.set_fsacl handle test_pool_name false packed_acl with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.set_fsacl handle test_pool_name false packed_acl with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "set_fsacl failed\n";
@@ -1259,8 +1259,8 @@ let () =
   let props = Nvlist.alloc () in
   Nvlist.add_string props test_property_name test_property_value;
   let packed_props = Nvlist.pack props Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.set_prop handle test_pool_name packed_props with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.set_prop handle test_pool_name packed_props with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -1281,8 +1281,8 @@ let () =
 let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.destroy handle test_dataset_name false with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.destroy handle test_dataset_name false with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "destroy failed\n";
@@ -1294,8 +1294,8 @@ let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
   let newname = Printf.sprintf "%s0" test_dataset_name in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.rename handle test_dataset_name newname [||] with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.rename handle test_dataset_name newname [||] with
   | Ok () -> ()
   | Error (Some failed, e) ->
       Printf.eprintf "rename failed on %s\n" failed;
@@ -1317,9 +1317,9 @@ let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
   common_snapshot_create test_snapshot_name;
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let target =
-    match Zfs_ioctls.rollback handle test_dataset_name None with
+    match Ioctls.rollback handle test_dataset_name None with
     | Ok packed_result ->
         let result = Nvlist.unpack packed_result in
         Option.get @@ Nvlist.lookup_string result "target"
@@ -1346,8 +1346,8 @@ let () =
   common_snapshot_create test_snapshot_name;
   let clone_name = Printf.sprintf "%s0" test_dataset_name in
   common_clone_create test_snapshot_name clone_name;
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.promote handle clone_name with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.promote handle clone_name with
   | Ok () -> ()
   | Error (Some snapname, e) ->
       Printf.eprintf "promote failed (conflicting snapshot %s)\n" snapname;
@@ -1371,8 +1371,8 @@ let () =
   Nvlist.add_boolean snaps snap1;
   Nvlist.add_nvlist args "snapnv" snaps;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.redact handle snap0 packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.redact handle snap0 packed_args with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "redact failed\n";
@@ -1389,8 +1389,8 @@ let () =
   Nvlist.add_boolean snaps test_snapshot_name;
   Nvlist.add_nvlist args "snaps" snaps;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.destroy_snaps handle test_pool_name packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.destroy_snaps handle test_pool_name packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -1404,10 +1404,8 @@ let () =
 (* inherit_prop *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match
-     Zfs_ioctls.inherit_prop handle test_pool_name test_property_name false
-   with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.inherit_prop handle test_pool_name test_property_name false with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "inherit_prop failed\n";
@@ -1417,9 +1415,9 @@ let () =
 (* userspace_one *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let space =
-    match Zfs_ioctls.userspace_one handle test_pool_name Userused "" 0L with
+    match Ioctls.userspace_one handle test_pool_name Userused "" 0L with
     | Ok space -> space
     | Error e ->
         Printf.eprintf "userspace_one failed\n";
@@ -1431,8 +1429,8 @@ let () =
 (* userspace_many *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.userspace_many handle test_pool_name Userused 8 0L with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.userspace_many handle test_pool_name Userused 8 0L with
   | Ok (_cookie, useraccts) ->
       let nuseraccts = Array.length useraccts in
       Printf.printf "got %d useracct record(s)\n" nuseraccts
@@ -1444,8 +1442,8 @@ let () =
 (* userspace_upgrade *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.userspace_upgrade handle test_pool_name with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.userspace_upgrade handle test_pool_name with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "userspace_upgrade failed\n";
@@ -1471,8 +1469,8 @@ let () =
   Nvlist.add_boolean holds test_tag_name;
   Nvlist.add_nvlist args test_snapshot_name holds;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.release handle test_pool_name packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.release handle test_pool_name packed_args with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -1489,9 +1487,9 @@ let () =
   common_dataset_create test_dataset_name;
   common_snapshot_create test_snapshot_name;
   common_hold_create test_snapshot_name test_tag_name;
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let _holds =
-    match Zfs_ioctls.get_holds handle test_snapshot_name with
+    match Ioctls.get_holds handle test_snapshot_name with
     | Ok packed_holds -> Nvlist.unpack packed_holds
     | Error e ->
         Printf.eprintf "get_holds failed\n";
@@ -1506,10 +1504,10 @@ let () =
   common_snapshot_create test_snapshot_name;
   let objsetid = common_objset_id_lookup test_snapshot_name in
   let fd = Unix.openfile "/dev/null" [ Unix.O_WRONLY ] 0 in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   (match
-     Zfs_ioctls.send handle test_snapshot_name (Some fd) true objsetid None
-       false [||]
+     Ioctls.send handle test_snapshot_name (Some fd) true objsetid None false
+       [||]
    with
   | Ok None -> ()
   | Ok (Some _estimate) -> failwith "send returned an estimate unexpectedly"
@@ -1545,10 +1543,10 @@ let () =
   (* Start the send operation in a thread. *)
   let sender () =
     let objsetid = common_objset_id_lookup test_snapshot_name in
-    let handle = Zfs_ioctls.open_handle () in
+    let handle = Ioctls.open_handle () in
     match
-      Zfs_ioctls.send handle test_snapshot_name (Some pfd0) true objsetid None
-        false [||]
+      Ioctls.send handle test_snapshot_name (Some pfd0) true objsetid None false
+        [||]
     with
     | Ok None -> ()
     | Error Unix.EPIPE -> ()
@@ -1560,9 +1558,9 @@ let () =
   let td = Domain.spawn sender in
   (* Check the send progress. *)
   Unix.sleep 1;
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let written, logical =
-    match Zfs_ioctls.send_progress handle test_snapshot_name pfd0 with
+    match Ioctls.send_progress handle test_snapshot_name pfd0 with
     | Ok sizes -> sizes
     | Error e ->
         Printf.eprintf "send_progress failed\n";
@@ -1584,8 +1582,8 @@ let () =
   let args = Nvlist.alloc () in
   Nvlist.add_int32 args "fd" @@ Int32.of_int @@ Util.int_of_descr fd;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.send_new handle test_snapshot_name packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.send_new handle test_snapshot_name packed_args with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "send_new failed\n";
@@ -1598,9 +1596,9 @@ let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
   common_snapshot_create test_snapshot_name;
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let space =
-    match Zfs_ioctls.send_space handle test_snapshot_name None with
+    match Ioctls.send_space handle test_snapshot_name None with
     | Ok packed_result ->
         let result = Nvlist.unpack packed_result in
         Option.get @@ Nvlist.lookup_uint64 result "space"
@@ -1614,8 +1612,8 @@ let () =
 (* clear *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.clear handle test_pool_name None None with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.clear handle test_pool_name None None with
   | Ok None -> ()
   | Ok (Some _packed_config) -> failwith "clear returned unexpected config\n"
   | Error e ->
@@ -1640,11 +1638,9 @@ let () =
   let props = Nvlist.alloc () in
   Nvlist.add_boolean props "guid";
   let packed_props = Nvlist.pack props Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let _bookmarks =
-    match
-      Zfs_ioctls.get_bookmarks handle test_dataset_name (Some packed_props)
-    with
+    match Ioctls.get_bookmarks handle test_dataset_name (Some packed_props) with
     | Ok packed_props -> Nvlist.unpack packed_props
     | Error e ->
         Printf.eprintf "get_bookmarks failed\n";
@@ -1658,9 +1654,9 @@ let () =
   common_dataset_create test_dataset_name;
   common_snapshot_create test_snapshot_name;
   common_bookmark_create test_pool_name test_snapshot_name test_bookmark_name;
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let _props =
-    match Zfs_ioctls.get_bookmark_props handle test_bookmark_name with
+    match Ioctls.get_bookmark_props handle test_bookmark_name with
     | Ok packed_props -> Nvlist.unpack packed_props
     | Error e ->
         Printf.eprintf "get_bookmark_props failed\n";
@@ -1677,8 +1673,8 @@ let () =
   let list = Nvlist.alloc () in
   Nvlist.add_boolean list test_bookmark_name;
   let packed_list = Nvlist.pack list Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.destroy_bookmarks handle test_pool_name packed_list with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.destroy_bookmarks handle test_pool_name packed_list with
   | Ok () -> ()
   | Error (Some packed_errors, e) ->
       let _errors = Nvlist.unpack packed_errors in
@@ -1700,8 +1696,8 @@ let () =
   Nvlist.add_uint64 args "guid" guid;
   Nvlist.add_string args "command" "";
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.nextboot handle packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.nextboot handle packed_args with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "nextboot failed\n";
@@ -1721,10 +1717,10 @@ let () =
   Nvlist.add_uint64 args "instrlimit" test_channel_program_instrlimit;
   Nvlist.add_uint64 args "memlimit" test_channel_program_memlimit;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let _result =
     match
-      Zfs_ioctls.channel_program handle test_pool_name packed_args
+      Ioctls.channel_program handle test_pool_name packed_args
         test_channel_program_memlimit
     with
     | Ok packed_result -> Nvlist.unpack packed_result
@@ -1741,9 +1737,9 @@ let () =
 (* error_log *)
 let () =
   let vdevs = common_setup () in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let errors =
-    match Zfs_ioctls.error_log handle test_pool_name with
+    match Ioctls.error_log handle test_pool_name with
     | Ok error_log -> error_log
     | Error e ->
         Printf.eprintf "error_log failed\n";
@@ -1758,8 +1754,8 @@ let () =
   let args = Nvlist.alloc () in
   Nvlist.add_string args "message" "this is a test";
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.log_history handle packed_args with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.log_history handle packed_args with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "log_history failed\n";
@@ -1772,9 +1768,9 @@ let () =
   common_dataset_create test_dataset_name;
   let prefix = Printf.sprintf "zfs-diff-%d" @@ Unix.getpid () in
   let fd = Unix.openfile "/dev/zfs" [ Unix.O_RDWR ] 0 in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let name =
-    match Zfs_ioctls.tmp_snapshot handle test_dataset_name prefix fd with
+    match Ioctls.tmp_snapshot handle test_dataset_name prefix fd with
     | Ok name -> name
     | Error e ->
         Printf.eprintf "tmp_snapshot failed\n";
@@ -1790,11 +1786,9 @@ let () =
   let vdevs = common_setup () in
   common_dataset_create test_dataset_name;
   common_snapshot_create test_snapshot_name;
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let space, compressed, uncompressed =
-    match
-      Zfs_ioctls.space_written handle test_dataset_name test_snapshot_name
-    with
+    match Ioctls.space_written handle test_dataset_name test_snapshot_name with
     | Ok result -> result
     | Error e ->
         Printf.eprintf "space_written failed\n";
@@ -1815,9 +1809,9 @@ let () =
   let args = Nvlist.alloc () in
   Nvlist.add_string args "firstsnap" snap0;
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let _result =
-    match Zfs_ioctls.space_snaps handle snap1 packed_args with
+    match Ioctls.space_snaps handle snap1 packed_args with
     | Ok packed_result -> Nvlist.unpack packed_result
     | Error e ->
         Printf.eprintf "space_snaps failed\n";
@@ -1833,14 +1827,14 @@ let () =
   Nvlist.add_uint64 bootenv "version" 1L (* VB_NVLIST *);
   Nvlist.add_string bootenv "testvar" "testvalue";
   let packed_bootenv = Nvlist.pack bootenv Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
-  (match Zfs_ioctls.set_bootenv handle test_pool_name packed_bootenv with
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.set_bootenv handle test_pool_name packed_bootenv with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "set_bootenv failed\n";
       failwith @@ Unix.error_message e);
   let bootenv =
-    match Zfs_ioctls.get_bootenv handle test_pool_name with
+    match Ioctls.get_bootenv handle test_pool_name with
     | Ok packed_bootenv -> Nvlist.unpack packed_bootenv
     | Error e ->
         Printf.eprintf "get_bootenv failed\n";
@@ -1856,9 +1850,9 @@ let () =
   let args = Nvlist.alloc () in
   Nvlist.add_int32 args "wait_activity" 1l (* ZPOOL_WAIT_FREE *);
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let result =
-    match Zfs_ioctls.wait handle test_pool_name packed_args with
+    match Ioctls.wait handle test_pool_name packed_args with
     | Ok packed_result -> Nvlist.unpack packed_result
     | Error e ->
         Printf.eprintf "wait failed\n";
@@ -1874,9 +1868,9 @@ let () =
   let args = Nvlist.alloc () in
   Nvlist.add_int32 args "wait_activity" 0l (* ZFS_WAIT_DELETEQ *);
   let packed_args = Nvlist.pack args Nvlist.Native in
-  let handle = Zfs_ioctls.open_handle () in
+  let handle = Ioctls.open_handle () in
   let result =
-    match Zfs_ioctls.wait_fs handle test_pool_name packed_args with
+    match Ioctls.wait_fs handle test_pool_name packed_args with
     | Ok packed_result -> Nvlist.unpack packed_result
     | Error e ->
         Printf.eprintf "wait_fs failed\n";

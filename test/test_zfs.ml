@@ -2,8 +2,8 @@ open Nvpair
 open Zfs
 
 let () =
-  let handle = Zfs_ioctls.open_handle () in
-  match Zfs_ioctls.pool_configs handle 0L with
+  let handle = Ioctls.open_handle () in
+  match Ioctls.pool_configs handle 0L with
   | Ok None -> ()
   | Ok (Some (new_gen, packed)) ->
       Printf.printf "gen: %Lu\n" new_gen;
