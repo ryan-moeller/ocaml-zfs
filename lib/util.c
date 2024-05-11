@@ -7,6 +7,7 @@
 #include <caml/alloc.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
+#include <caml/threads.h>
 #include <caml/unixsupport.h>
 
 CAMLprim value
@@ -36,9 +37,13 @@ caml_zfs_util_get_system_hostid(value unit)
 	CAMLparam1 (unit);
 	unsigned long hostid;
 	size_t size;
+	int err;
 
 	size = sizeof hostid;
-	if (sysctlbyname("kern.hostid", &hostid, &size, NULL, 0) == -1) {
+	caml_release_runtime_system();
+	err = sysctlbyname("kern.hostid", &hostid, &size, NULL, 0);
+	caml_acquire_runtime_system();
+	if (err) {
 		caml_failwith("sysctlbyname");
 	}
 	CAMLreturn (caml_copy_int32(hostid));
@@ -49,10 +54,13 @@ caml_zfs_util_getzoneid(value unit)
 {
 	CAMLparam1 (unit);
 	size_t size;
-	int jid;
+	int jid, err;
 
 	size = sizeof jid;
-	if (sysctlbyname("security.jail.param.jid", &jid, &size, NULL, 0) == -1) {
+	caml_release_runtime_system();
+	err = sysctlbyname("security.jail.param.jid", &jid, &size, NULL, 0);
+	caml_acquire_runtime_system();
+	if (err) {
 		caml_failwith("sysctlbyname");
 	}
 	CAMLreturn (Val_int(jid));
@@ -68,8 +76,10 @@ caml_zfs_util_getpwnam(value name)
 	struct passwd *pw;
 	int err;
 
+	caml_release_runtime_system();
 	err = getpwnam_r(String_val(name), &pwd, buf, sizeof buf, &pw);
-	if (err != 0) {
+	caml_acquire_runtime_system();
+	if (err) {
 		ret = caml_alloc(1, 1);
 		Store_field(ret, 0, caml_unix_error_of_code(err));
 	} else if (pw == NULL) {
@@ -103,8 +113,10 @@ caml_zfs_util_getgrnam(value name)
 	struct group *gr;
 	int err;
 
+	caml_release_runtime_system();
 	err = getgrnam_r(String_val(name), &grp, buf, sizeof buf, &gr);
-	if (err != 0) {
+	caml_acquire_runtime_system();
+	if (err) {
 		ret = caml_alloc(1, 1);
 		Store_field(ret, 0, caml_unix_error_of_code(err));
 	} else if (gr == NULL) {
