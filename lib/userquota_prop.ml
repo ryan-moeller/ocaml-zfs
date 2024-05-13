@@ -27,6 +27,20 @@ let of_string_opt = function
   | "projectobjquota" -> Some Projectobjquota
   | _ -> None
 
+let to_string = function
+  | Userused -> "userused"
+  | Userquota -> "userquota"
+  | Groupused -> "groupused"
+  | Groupquota -> "groupquota"
+  | Userobjused -> "userobjused"
+  | Userobjquota -> "userobjquota"
+  | Groupobjused -> "groupobjused"
+  | Groupobjquota -> "groupobjquota"
+  | Projectused -> "projectused"
+  | Projectquota -> "projectquota"
+  | Projectobjused -> "projectobjused"
+  | Projectobjquota -> "projectoboquota"
+
 let decode_propname s zoned =
   let ( >>= ) = Option.bind in
   Option.join
@@ -49,3 +63,24 @@ let decode_propname s zoned =
              | Error e -> raise (Unix.Unix_error (e, "getgrnam", ident)))
          | Projectused | Projectquota | Projectobjused | Projectobjquota ->
              Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
+
+let encode_propname prop rid domain =
+  Printf.sprintf "%s@%x-%s" (to_string prop) rid domain
+
+let encode_propval prop rid intval =
+  let intprop =
+    match prop with
+    | Userused -> 0L
+    | Userquota -> 1L
+    | Groupused -> 2L
+    | Groupquota -> 3L
+    | Userobjused -> 4L
+    | Userobjquota -> 5L
+    | Groupobjused -> 6L
+    | Groupobjquota -> 7L
+    | Projectused -> 8L
+    | Projectquota -> 9L
+    | Projectobjused -> 10L
+    | Projectobjquota -> 11L
+  in
+  [| intprop; Int64.of_int rid; intval |]
