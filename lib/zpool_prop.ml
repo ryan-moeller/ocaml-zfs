@@ -646,8 +646,9 @@ let index_to_string prop idx =
   (attributes prop).index_table
   |> Array.find_map (fun (s, i) -> if i = idx then Some s else None)
 
+type checked_value = String of string | Uint64 of int64
+
 let validate nvl poolname version create import =
-  let open Either in
   let open Types in
   let open Nvpair in
   let ( let* ) = Result.bind in
@@ -677,14 +678,14 @@ let validate nvl poolname version create import =
             let strval = Nvpair.value_string pair in
             if String.length strval > Util.max_prop_len then
               Error (EzfsBadProp, Printf.sprintf "'%s' is too long" propname)
-            else Ok (Left strval)
+            else Ok (String strval)
       | Index -> (
           if datatype != String then
             Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
           else
             let strval = Nvpair.value_string pair in
             match string_to_index prop strval with
-            | Some intval -> Ok (Right intval)
+            | Some intval -> Ok (Uint64 intval)
             | None ->
                 Error
                   ( EzfsBadProp,
@@ -695,9 +696,11 @@ let validate nvl poolname version create import =
           | String -> (
               let strval = Nvpair.value_string pair in
               match Util.nicestrtonum strval with
-              | Ok intval -> Ok (Right intval)
+              | Ok intval -> Ok (Uint64 intval)
               | Error msg -> Error (EzfsBadProp, msg))
-          | Uint64 -> Ok (Right (Nvpair.value_uint64 pair))
+          | Uint64 ->
+              let intval = Nvpair.value_uint64 pair in
+              Ok (Uint64 intval)
           | _ ->
               Error
                 (EzfsBadProp, Printf.sprintf "'%s' must be a number" propname))
@@ -734,7 +737,7 @@ let validate nvl poolname version create import =
               (* XXX: disabling features broken in libzfs? *)
               Error (EzfsBadProp, "features can't be disabled like this")
             else (* Acceptable feature. *)
-              Ok (propname, Right 0L)
+              Ok (propname, Uint64 0L)
       | None ->
           (* Not a feature, check if it is a userprop. *)
           if String.contains propname ':' then
@@ -753,7 +756,7 @@ let validate nvl poolname version create import =
                   ( EzfsBadProp,
                     Printf.sprintf "property value '%s' is too long" strval )
               else (* Acceptable userprop. *)
-                Ok (propname, Left strval)
+                Ok (propname, String strval)
           else
             (* Not a userprop either. *)
             Error (EzfsBadProp, Printf.sprintf "invalid property '%s'" propname)
@@ -769,7 +772,7 @@ let validate nvl poolname version create import =
               propname )
       else
         match parse_pair attrs with
-        | Ok (Left strval) ->
+        | Ok (String strval) ->
             let* () =
               match prop with
               | Bootfs ->
@@ -863,8 +866,8 @@ let validate nvl poolname version create import =
               | _ -> Ok ()
             in
             (* Acceptable string property. *)
-            Ok (propname, Left strval)
-        | Ok (Right intval) ->
+            Ok (propname, String strval)
+        | Ok (Uint64 intval) ->
             let* () =
               match prop with
               | Version ->
@@ -901,7 +904,7 @@ let validate nvl poolname version create import =
               | _ -> Ok ()
             in
             (* Acceptable integer property. *)
-            Ok (propname, Right intval)
+            Ok (propname, Uint64 intval)
         | Error what -> Error what
   in
   (*
@@ -909,8 +912,8 @@ let validate nvl poolname version create import =
    *)
   let result = Nvlist.alloc () in
   let accept = function
-    | propname, Left strval -> Nvlist.add_string result propname strval
-    | propname, Right intval -> Nvlist.add_uint64 result propname intval
+    | propname, String strval -> Nvlist.add_string result propname strval
+    | propname, Uint64 intval -> Nvlist.add_uint64 result propname intval
   in
   let rec iter_pairs prev =
     match Nvlist.next_nvpair nvl prev with
