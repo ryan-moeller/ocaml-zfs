@@ -2165,3 +2165,8 @@ let string_to_index prop str =
 let index_to_string prop idx =
   (attributes prop).index_table
   |> Array.find_map (fun (s, i) -> if i = idx then Some s else None)
+
+let is_encryption_key_param = function
+  (* properties that require a loaded encryption key to modify *)
+  | Pbkdf2_salt | Pbkdf2_iters | Keyformat -> true
+  | _ -> false
