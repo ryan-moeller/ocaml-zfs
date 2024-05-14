@@ -85,5 +85,7 @@ type zfs_error =
   | EzfsInvalidName
   | EzfsBadProp
   | EzfsPropReadonly
+  | EzfsPropType
   | EzfsBadVersion
   | EzfsBadPath
+  | EzfsZoned
