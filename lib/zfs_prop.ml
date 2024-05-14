@@ -1315,7 +1315,7 @@ let attributes = function
       {
         name = "recordsize";
         prop_type = Number;
-        numdefault = Int64.shift_left 1L 17 (* SPA_OLD_MAXBLOCKSIZE *);
+        numdefault = Util.spa_old_maxblocksize;
         strdefault = None;
         readonly = false;
         inherits = true;

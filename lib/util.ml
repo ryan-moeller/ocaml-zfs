@@ -196,3 +196,11 @@ let load_compat compat =
       in
       let intersection = List.fold_left StringSet.inter full sets in
       Ok (StringSet.to_list intersection |> List.map Zfeature.of_string)
+
+let spa_minblockshift = 9
+let spa_minblocksize = Int64.shift_left 1L spa_minblockshift
+let spa_old_maxblockshift = 17
+let spa_old_maxblocksize = Int64.shift_left 1L spa_old_maxblockshift
+let spa_maxblockshift = 24
+let spa_maxblocksize = Int64.shift_left 1L spa_maxblockshift
+let ispower2 x = Int64.logand x (Int64.sub x 1L) = 0L
