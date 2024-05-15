@@ -926,3 +926,20 @@ let validate nvl poolname version create import =
     | None -> Ok result
   in
   iter_pairs None
+
+let validate_name name opening =
+  let reserved = [| "mirror"; "raidz"; "draid"; "spare"; "log" |] in
+  let name_starts_with prefix = String.starts_with ~prefix name in
+  let max_pool_name_len =
+    Util.max_name_len - 2 - (2 * String.length Util.origin_dir_name)
+  in
+  let valid_chars = Str.regexp "^[a-zA-Z0-9-_.: ]+$" in
+  let valid_first_char = Str.regexp "^[a-zA-Z]" in
+  if (not opening) && Array.exists name_starts_with reserved then
+    Error "name is reserved"
+  else if String.length name >= max_pool_name_len then Error "name is too long"
+  else if not (Str.string_match valid_chars name 0) then
+    Error "invalid character in pool name"
+  else if not (Str.string_match valid_first_char name 0) then
+    Error "name must begin with a letter"
+  else Ok ()
