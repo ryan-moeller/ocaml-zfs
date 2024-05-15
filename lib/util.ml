@@ -85,57 +85,6 @@ let origin_dir_name = "$ORIGIN"
 
 let version_is_supported v = (v >= 1L && v <= 28L) || v = 5000L
 
-let load_compat compat =
-  let module StringSet = Set.Make (String) in
-  if compat = "" || compat = "off" then Ok (Array.to_list Zfeature.all_features)
-  else if compat = "legacy" then Ok []
-  else
-    let read_compat_file path =
-      try
-        let fd = Unix.openfile path [ Unix.O_RDONLY; Unix.O_CLOEXEC ] 0 in
-        let st = Unix.fstat fd in
-        if st.st_size < 1 || st.st_size > 16384 then None
-        else
-          let ic = Unix.in_channel_of_descr fd in
-          really_input_string ic st.st_size
-          |> String.split_on_char '\n'
-          |> List.map (String.split_on_char '#')
-          |> List.map List.hd
-          |> List.concat_map (Str.split (Str.regexp "[, \t][ \t]*"))
-          |> List.map String.trim
-          |> List.filter_map (fun feature ->
-                 match String.split_on_char ':' feature with
-                 | [ _org; featname ] ->
-                     let feat = Zfeature.of_string featname in
-                     if feat = None then None
-                     else
-                       let attrs = Zfeature.attributes feat in
-                       if attrs.guid = feature then Some attrs.name else None
-                 | _ -> None)
-          |> StringSet.of_list |> Option.some
-      with Unix.Unix_error (Unix.ENOENT, _, _) -> None
-    in
-    let results =
-      String.split_on_char ',' compat
-      |> List.map (fun filename ->
-             [ "/etc/zfs/compatibility.d/"; "/usr/share/zfs/compatibility.d/" ]
-             |> List.find_map (fun directory ->
-                    read_compat_file (directory ^ filename))
-             |> Option.to_result ~none:filename)
-    in
-    let errors = List.filter Result.is_error results in
-    if not (List.is_empty errors) then
-      Error (List.map Result.get_error errors |> String.concat ", ")
-    else
-      let sets = List.map Result.get_ok results in
-      let full =
-        Zfeature.all_features
-        |> Array.map (fun feature -> (Zfeature.attributes feature).name)
-        |> Array.to_list |> StringSet.of_list
-      in
-      let intersection = List.fold_left StringSet.inter full sets in
-      Ok (StringSet.to_list intersection |> List.map Zfeature.of_string)
-
 let spa_minblockshift = 9
 let spa_minblocksize = Int64.shift_left 1L spa_minblockshift
 let spa_old_maxblockshift = 17
