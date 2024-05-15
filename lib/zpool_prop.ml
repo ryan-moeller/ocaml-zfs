@@ -754,13 +754,13 @@ let validate nvl poolname version create import =
             if Nvpair.data_type pair != String then
               Error
                 (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
-            else if String.length propname >= Util.max_name_len then
+            else if String.length propname >= Const.max_name_len then
               Error
                 ( EzfsBadProp,
                   Printf.sprintf "property name '%s' is too long" propname )
             else
               let strval = Nvpair.value_string pair in
-              if String.length strval >= Util.max_prop_len then
+              if String.length strval >= Const.max_prop_len then
                 Error
                   ( EzfsBadProp,
                     Printf.sprintf "property value '%s' is too long" strval )
@@ -794,7 +794,7 @@ let validate nvl poolname version create import =
                   (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
               else
                 let strval = Nvpair.value_string pair in
-                if String.length strval > Util.max_prop_len then
+                if String.length strval > Const.max_prop_len then
                   Error (EzfsBadProp, Printf.sprintf "'%s' is too long" propname)
                 else Ok (String strval)
           | Index -> (
@@ -910,11 +910,11 @@ let validate nvl poolname version create import =
                   if not (String.for_all Util.isprint strval) then
                     Error
                       (EzfsBadProp, "comment may only have printable characters")
-                  else if String.length strval > Util.max_comment_len then
+                  else if String.length strval > Const.max_comment_len then
                     Error
                       ( EzfsBadProp,
                         Printf.sprintf "comment must not exceed %d characters"
-                          Util.max_comment_len )
+                          Const.max_comment_len )
                   else Ok ()
               | _ -> Ok ()
             in
@@ -984,7 +984,7 @@ let validate_name name opening =
   let reserved = [| "mirror"; "raidz"; "draid"; "spare"; "log" |] in
   let name_starts_with prefix = String.starts_with ~prefix name in
   let max_pool_name_len =
-    Util.max_name_len - 2 - (2 * String.length Util.origin_dir_name)
+    Const.max_name_len - 2 - (2 * String.length Const.origin_dir_name)
   in
   let valid_chars = Str.regexp "^[a-zA-Z0-9-_.: ]+$" in
   let valid_first_char = Str.regexp "^[a-zA-Z]" in

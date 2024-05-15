@@ -1315,7 +1315,7 @@ let attributes = function
       {
         name = "recordsize";
         prop_type = Number;
-        numdefault = Util.spa_old_maxblocksize;
+        numdefault = Const.spa_old_maxblocksize;
         strdefault = None;
         readonly = false;
         inherits = true;
@@ -2196,13 +2196,13 @@ let validate nvl dataset_type zoned create keyok =
         (* Validate as a userprop. *)
         if Nvpair.data_type pair != String then
           Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
-        else if String.length propname >= Util.max_name_len then
+        else if String.length propname >= Const.max_name_len then
           Error
             ( EzfsBadProp,
               Printf.sprintf "property name '%s' is too long" propname )
         else
           let strval = Nvpair.value_string pair in
-          if String.length strval >= Util.max_prop_len then
+          if String.length strval >= Const.max_prop_len then
             Error
               ( EzfsBadProp,
                 Printf.sprintf "property value '%s' is too long" strval )
@@ -2298,7 +2298,7 @@ let validate nvl dataset_type zoned create keyok =
                   (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
               else
                 let strval = Nvpair.value_string pair in
-                if String.length strval > Util.max_prop_len then
+                if String.length strval > Const.max_prop_len then
                   Error (EzfsBadProp, Printf.sprintf "'%s' is too long" propname)
                 else Ok (String strval)
           | Index -> (
@@ -2349,7 +2349,7 @@ let validate nvl dataset_type zoned create keyok =
                     not
                       (List.for_all
                          (fun component ->
-                           String.length component < Util.max_name_len)
+                           String.length component < Const.max_name_len)
                          (String.split_on_char '/' strval))
                   then
                     Error
@@ -2402,8 +2402,8 @@ let validate nvl dataset_type zoned create keyok =
               | Volblocksize | Recordsize ->
                   (* XXX: Would need a handle to check maxblocksize. *)
                   if
-                    intval < Util.spa_minblocksize
-                    || intval > Util.spa_maxblocksize
+                    intval < Const.spa_minblocksize
+                    || intval > Const.spa_maxblocksize
                     || not (Util.ispower2 intval)
                   then
                     (* TODO: nicebytes *)
@@ -2411,7 +2411,7 @@ let validate nvl dataset_type zoned create keyok =
                       ( EzfsBadProp,
                         Printf.sprintf
                           "'%s' must be a power of 2 from 512B to %LuB" propname
-                          Util.spa_maxblocksize )
+                          Const.spa_maxblocksize )
                   else Ok ()
               | Special_small_blocks ->
                   (* XXX: Would need a handle to check maxblocksize. *)
@@ -2419,8 +2419,8 @@ let validate nvl dataset_type zoned create keyok =
                           if set first, but it may not be *)
                   if
                     intval != 0L
-                    && (intval < Util.spa_minblocksize
-                       || intval > Util.spa_maxblocksize
+                    && (intval < Const.spa_minblocksize
+                       || intval > Const.spa_maxblocksize
                        || not (Util.ispower2 intval))
                   then
                     (* TODO: nicebytes *)
@@ -2429,7 +2429,7 @@ let validate nvl dataset_type zoned create keyok =
                         Printf.sprintf
                           "invalid '%s=%Lu property: must be zero or a power \
                            of 2 from 512B to %LuB"
-                          propname intval Util.spa_maxblocksize )
+                          propname intval Const.spa_maxblocksize )
                   else Ok ()
               | Pbkdf2_iters ->
                   let min_pbkdf2_iterations = 100000L in
@@ -2483,7 +2483,7 @@ let validate_name name dstypes modifying =
     Error "missing '#' delimiter in bookmark name"
   else if modifying && String.contains name '%' then
     Error "invalid character '%' in name"
-  else if String.length name >= Util.max_name_len then Error "name is too long"
+  else if String.length name >= Const.max_name_len then Error "name is too long"
   else if String.starts_with ~prefix:"/" name then Error "leading slash in name"
   else if String.ends_with ~suffix:"/" name then Error "trailing slash in name"
   else
