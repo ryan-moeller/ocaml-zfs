@@ -2317,7 +2317,9 @@ let validate nvl dataset_type zoned create keyok =
                   match Util.nicestrtonum strval with
                   | Ok intval -> Ok (Uint64 intval)
                   | Error msg -> Error (EzfsBadProp, msg))
-              | Uint64 -> Ok (Uint64 (Nvpair.value_uint64 pair))
+              | Uint64 ->
+                  let intval = Nvpair.value_uint64 pair in
+                  Ok (Uint64 intval)
               | _ ->
                   Error
                     ( EzfsBadProp,
