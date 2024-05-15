@@ -2190,45 +2190,6 @@ let validate nvl dataset_type zoned create keyok =
   let check pair =
     let propname = Nvpair.name pair in
     let prop = of_string propname in
-    (*
-     * Parse the value of a pair into the correct type for the property.
-     * Index properties decode the string value into its index.  Number values
-     *)
-    let parse_pair attrs =
-      let datatype = Nvpair.data_type pair in
-      match attrs.prop_type with
-      | String ->
-          if datatype != String then
-            Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
-          else
-            let strval = Nvpair.value_string pair in
-            if String.length strval > Util.max_prop_len then
-              Error (EzfsBadProp, Printf.sprintf "'%s' is too long" propname)
-            else Ok (String strval)
-      | Index -> (
-          if datatype != String then
-            Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
-          else
-            let strval = Nvpair.value_string pair in
-            match string_to_index prop strval with
-            | Some intval -> Ok (Uint64 intval)
-            | None ->
-                Error
-                  ( EzfsBadProp,
-                    Printf.sprintf "'%s' must be one of '%s'" propname
-                      (Option.get attrs.values) ))
-      | Number -> (
-          match datatype with
-          | String -> (
-              let strval = Nvpair.value_string pair in
-              match Util.nicestrtonum strval with
-              | Ok intval -> Ok (Uint64 intval)
-              | Error msg -> Error (EzfsBadProp, msg))
-          | Uint64 -> Ok (Uint64 (Nvpair.value_uint64 pair))
-          | _ ->
-              Error
-                (EzfsBadProp, Printf.sprintf "'%s' must be a number" propname))
-    in
     if prop = Inval then
       (* Not a zfs property, check if it is a userprop. *)
       if String.contains propname ':' then
@@ -2319,7 +2280,48 @@ let validate nvl dataset_type zoned create keyok =
             Printf.sprintf "property '%s' can only be set at creation time"
               propname )
       else
-        match parse_pair attrs with
+        (*
+         * Parse the value of a pair into the correct type for the property.
+         * Index properties decode the string value into its index.  Number values
+         *)
+        match
+          let datatype = Nvpair.data_type pair in
+          match attrs.prop_type with
+          | String ->
+              if datatype != String then
+                Error
+                  (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
+              else
+                let strval = Nvpair.value_string pair in
+                if String.length strval > Util.max_prop_len then
+                  Error (EzfsBadProp, Printf.sprintf "'%s' is too long" propname)
+                else Ok (String strval)
+          | Index -> (
+              if datatype != String then
+                Error
+                  (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
+              else
+                let strval = Nvpair.value_string pair in
+                match string_to_index prop strval with
+                | Some intval -> Ok (Uint64 intval)
+                | None ->
+                    Error
+                      ( EzfsBadProp,
+                        Printf.sprintf "'%s' must be one of '%s'" propname
+                          (Option.get attrs.values) ))
+          | Number -> (
+              match datatype with
+              | String -> (
+                  let strval = Nvpair.value_string pair in
+                  match Util.nicestrtonum strval with
+                  | Ok intval -> Ok (Uint64 intval)
+                  | Error msg -> Error (EzfsBadProp, msg))
+              | Uint64 -> Ok (Uint64 (Nvpair.value_uint64 pair))
+              | _ ->
+                  Error
+                    ( EzfsBadProp,
+                      Printf.sprintf "'%s' must be a number" propname ))
+        with
         | Ok (String strval) ->
             let* () =
               match prop with

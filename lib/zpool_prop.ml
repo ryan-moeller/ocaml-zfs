@@ -714,48 +714,6 @@ let validate nvl poolname version create import =
   let check pair =
     let propname = Nvpair.name pair in
     let prop = of_string propname in
-    (*
-     * Parse the value of a pair into the correct type for the property.
-     * Index properties decode the string value into its index.  Number values
-     * given as strings are parsed and units if given are applied.
-     *)
-    let parse_pair attrs =
-      let datatype = Nvpair.data_type pair in
-      match attrs.prop_type with
-      | String ->
-          if datatype != String then
-            Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
-          else
-            let strval = Nvpair.value_string pair in
-            if String.length strval > Util.max_prop_len then
-              Error (EzfsBadProp, Printf.sprintf "'%s' is too long" propname)
-            else Ok (String strval)
-      | Index -> (
-          if datatype != String then
-            Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
-          else
-            let strval = Nvpair.value_string pair in
-            match string_to_index prop strval with
-            | Some intval -> Ok (Uint64 intval)
-            | None ->
-                Error
-                  ( EzfsBadProp,
-                    Printf.sprintf "'%s' must be one of '%s'" propname
-                      (Option.get attrs.values) ))
-      | Number -> (
-          match datatype with
-          | String -> (
-              let strval = Nvpair.value_string pair in
-              match Util.nicestrtonum strval with
-              | Ok intval -> Ok (Uint64 intval)
-              | Error msg -> Error (EzfsBadProp, msg))
-          | Uint64 ->
-              let intval = Nvpair.value_uint64 pair in
-              Ok (Uint64 intval)
-          | _ ->
-              Error
-                (EzfsBadProp, Printf.sprintf "'%s' must be a number" propname))
-    in
     if prop = Inval then
       (* Not a zpool property, check if it is a valid feature. *)
       match Zfeature.of_propname propname with
@@ -822,7 +780,51 @@ let validate nvl poolname version create import =
             Printf.sprintf "property '%s' can only be set at creation time"
               propname )
       else
-        match parse_pair attrs with
+        (*
+         * Parse the value of a pair into the correct type for the property.
+         * Index properties decode the string value into its index.  Number values
+         * given as strings are parsed and units if given are applied.
+         *)
+        match
+          let datatype = Nvpair.data_type pair in
+          match attrs.prop_type with
+          | String ->
+              if datatype != String then
+                Error
+                  (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
+              else
+                let strval = Nvpair.value_string pair in
+                if String.length strval > Util.max_prop_len then
+                  Error (EzfsBadProp, Printf.sprintf "'%s' is too long" propname)
+                else Ok (String strval)
+          | Index -> (
+              if datatype != String then
+                Error
+                  (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
+              else
+                let strval = Nvpair.value_string pair in
+                match string_to_index prop strval with
+                | Some intval -> Ok (Uint64 intval)
+                | None ->
+                    Error
+                      ( EzfsBadProp,
+                        Printf.sprintf "'%s' must be one of '%s'" propname
+                          (Option.get attrs.values) ))
+          | Number -> (
+              match datatype with
+              | String -> (
+                  let strval = Nvpair.value_string pair in
+                  match Util.nicestrtonum strval with
+                  | Ok intval -> Ok (Uint64 intval)
+                  | Error msg -> Error (EzfsBadProp, msg))
+              | Uint64 ->
+                  let intval = Nvpair.value_uint64 pair in
+                  Ok (Uint64 intval)
+              | _ ->
+                  Error
+                    ( EzfsBadProp,
+                      Printf.sprintf "'%s' must be a number" propname ))
+        with
         | Ok (String strval) ->
             let* () =
               match prop with
