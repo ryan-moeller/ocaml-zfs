@@ -2283,6 +2283,7 @@ let validate nvl dataset_type zoned create keyok =
         (*
          * Parse the value of a pair into the correct type for the property.
          * Index properties decode the string value into its index.  Number values
+         * given as strings are parsed and units if given are applied.
          *)
         match
           let datatype = Nvpair.data_type pair in
