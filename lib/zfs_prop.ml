@@ -2201,9 +2201,13 @@ let validate nvl dataset_type zoned create keyok =
             ( EzfsBadProp,
               Printf.sprintf "property name '%s' is too long" propname )
         else
-          (* Acceptable userprop. *)
           let strval = Nvpair.value_string pair in
-          Ok (propname, String strval)
+          if String.length strval >= Util.max_prop_len then
+            Error
+              ( EzfsBadProp,
+                Printf.sprintf "property value '%s' is too long" strval )
+          else (* Acceptable userprop. *)
+            Ok (propname, String strval)
       else if dataset_type = Snapshot then
         Error
           ( EzfsPropType,
