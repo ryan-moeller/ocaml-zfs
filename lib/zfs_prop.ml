@@ -2444,7 +2444,7 @@ let validate nvl dataset_type zoned create keyok =
             (* Acceptable integer property. *)
             Ok (propname, Uint64 intval)
         | Ok (Uint64_array intvals) -> Ok (propname, Uint64_array intvals)
-        | Error what -> Error what
+        | Error e -> Error e
   in
   (*
    * Build up an nvlist that can be passed to the kernel.

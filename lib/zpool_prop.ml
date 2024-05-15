@@ -958,7 +958,7 @@ let validate nvl poolname version create import =
             in
             (* Acceptable integer property. *)
             Ok (propname, Uint64 intval)
-        | Error what -> Error what
+        | Error e -> Error e
   in
   (*
    * Build up an nvlist that can be passed to the kernel.
