@@ -83,50 +83,6 @@ let max_name_len = 256
 let max_comment_len = 32
 let origin_dir_name = "$ORIGIN"
 
-let validate_name name dstypes modifying =
-  if (not (Array.mem Zfs_prop.Snapshot dstypes)) && String.contains name '@'
-  then Error "snapshot delimiter '@' is not expected here"
-  else if Array.mem Zfs_prop.Snapshot dstypes && not (String.contains name '@')
-  then Error "missing '@' delimiter in snapshot name"
-  else if
-    (not (Array.mem Zfs_prop.Bookmark dstypes)) && String.contains name '#'
-  then Error "bookmark delimiter '#' is not expected here"
-  else if Array.mem Zfs_prop.Bookmark dstypes && not (String.contains name '#')
-  then Error "missing '#' delimiter in bookmark name"
-  else if modifying && String.contains name '%' then
-    Error "invalid character '%' in name"
-  else if String.length name >= max_name_len then Error "name is too long"
-  else if String.starts_with ~prefix:"/" name then Error "leading slash in name"
-  else if String.ends_with ~suffix:"/" name then Error "trailing slash in name"
-  else
-    match
-      Str.split_delim (Str.regexp "[/@#]") name
-      |> List.find_map (function
-           | "" ->
-               Some "empty component or misplaced '@' or '#' delimiter in name"
-           | "." -> Some "self reference, '.' is found in name"
-           | ".." -> Some "parent reference, '..' is found in name"
-           | component ->
-               String.to_seq component
-               |> Seq.find_map (fun c ->
-                      let valid_chars =
-                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.: \
-                         %"
-                      in
-                      if String.contains valid_chars c then None
-                      else
-                        Some (Printf.sprintf "invalid character '%c' in name" c)))
-    with
-    | Some errmsg -> Error errmsg
-    | None ->
-        let ndelim =
-          String.fold_left
-            (fun count c -> count + if String.contains "@#" c then 1 else 0)
-            0 name
-        in
-        if ndelim > 1 then Error "multiple '@' and/or '#' delimiters in name"
-        else Ok ()
-
 let version_is_supported v = (v >= 1L && v <= 28L) || v = 5000L
 
 let load_compat compat =

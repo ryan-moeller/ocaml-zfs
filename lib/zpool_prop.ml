@@ -791,7 +791,7 @@ let validate nvl poolname version create import =
                           propname )
                   else if strval = "" then Ok ()
                   else
-                    Util.validate_name strval
+                    Zfs_prop.validate_name strval
                       [| Zfs_prop.Filesystem; Zfs_prop.Snapshot |]
                       false
                     >>= (fun () ->
