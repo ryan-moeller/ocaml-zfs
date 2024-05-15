@@ -2171,6 +2171,298 @@ let is_encryption_key_param = function
   | Pbkdf2_salt | Pbkdf2_iters | Keyformat -> true
   | _ -> false
 
+type checked_value =
+  | String of string
+  | Uint64 of int64
+  | Uint64_array of int64 array
+
+let validate nvl dataset_type zoned create keyok =
+  let open Types in
+  let open Nvpair in
+  let ( let* ) = Result.bind in
+  (*
+   * Given an nvpair from nvl as property=value, check that the name and value
+   * are acceptable to pass on to the kernel.  If the property is index typed,
+   * decode the string value to its index.  If the property is number typed,
+   * the value may be specified as a string with optional units.  The property
+   * name and value are returned on success, otherwise an error type and reason.
+   *)
+  let check pair =
+    let propname = Nvpair.name pair in
+    let prop = of_string propname in
+    (*
+     * Parse the value of a pair into the correct type for the property.
+     * Index properties decode the string value into its index.  Number values
+     *)
+    let parse_pair attrs =
+      let datatype = Nvpair.data_type pair in
+      match attrs.prop_type with
+      | String ->
+          if datatype != String then
+            Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
+          else
+            let strval = Nvpair.value_string pair in
+            if String.length strval > Util.max_prop_len then
+              Error (EzfsBadProp, Printf.sprintf "'%s' is too long" propname)
+            else Ok (String strval)
+      | Index -> (
+          if datatype != String then
+            Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
+          else
+            let strval = Nvpair.value_string pair in
+            match string_to_index prop strval with
+            | Some intval -> Ok (Uint64 intval)
+            | None ->
+                Error
+                  ( EzfsBadProp,
+                    Printf.sprintf "'%s' must be one of '%s'" propname
+                      (Option.get attrs.values) ))
+      | Number -> (
+          match datatype with
+          | String -> (
+              let strval = Nvpair.value_string pair in
+              match Util.nicestrtonum strval with
+              | Ok intval -> Ok (Uint64 intval)
+              | Error msg -> Error (EzfsBadProp, msg))
+          | Uint64 -> Ok (Uint64 (Nvpair.value_uint64 pair))
+          | _ ->
+              Error
+                (EzfsBadProp, Printf.sprintf "'%s' must be a number" propname))
+    in
+    if prop = Inval then
+      (* Not a zfs property, check if it is a userprop. *)
+      if String.contains propname ':' then
+        (* Validate as a userprop. *)
+        if Nvpair.data_type pair != String then
+          Error (EzfsBadProp, Printf.sprintf "'%s' must be a string" propname)
+        else if String.length propname >= Util.max_name_len then
+          Error
+            ( EzfsBadProp,
+              Printf.sprintf "property name '%s' is too long" propname )
+        else
+          (* Acceptable userprop. *)
+          let strval = Nvpair.value_string pair in
+          Ok (propname, String strval)
+      else if dataset_type = Snapshot then
+        Error
+          ( EzfsPropType,
+            Printf.sprintf "'%s' cannot be modified for snapshots" propname )
+      else
+        (* Not a userprop, check if a userquota prop. *)
+        match Userquota_prop.decode_propname propname zoned with
+        | Some (quotaprop, rid) -> (
+            let domain = "" (* TODO: IDMAP support in decode_propname *) in
+            match quotaprop with
+            | Userquota | Userobjquota | Groupquota | Groupobjquota
+            | Projectquota | Projectobjquota ->
+                (* Valid userquota prop, check the value. *)
+                let* intval =
+                  match Nvpair.data_type pair with
+                  | String -> (
+                      let strval = Nvpair.value_string pair in
+                      if strval = "none" then Ok 0L
+                      else
+                        match Util.nicestrtonum strval with
+                        | Ok intval -> Ok intval
+                        | Error msg -> Error (EzfsBadProp, msg))
+                  | Uint64 ->
+                      let intval = Nvpair.value_uint64 pair in
+                      if intval = 0L then
+                        Error
+                          ( EzfsBadProp,
+                            "use 'none' to disable {user|group|project} quota"
+                          )
+                      else Ok intval
+                  | _ ->
+                      Error
+                        ( EzfsBadProp,
+                          Printf.sprintf "'%s' must be a number" propname )
+                in
+                (* Valid value, encode the name and value for the nvlist. *)
+                let encoded_propname =
+                  Userquota_prop.encode_propname quotaprop rid domain
+                in
+                let encoded_propval =
+                  Userquota_prop.encode_propval quotaprop rid intval
+                in
+                Ok (encoded_propname, Uint64_array encoded_propval)
+            | _ ->
+                (* Readonly userquota prop. *)
+                Error
+                  (EzfsPropReadonly, Printf.sprintf "'%s' is readonly" propname)
+            )
+        | None ->
+            (* Not a userquota prop, check if a written prop. *)
+            if
+              String.starts_with ~prefix:"written@" propname
+              || String.starts_with ~prefix:"written#" propname
+            then
+              Error
+                (EzfsPropReadonly, Printf.sprintf "'%s' is readonly" propname)
+            else
+              (* Not a written prop either. *)
+              Error
+                (EzfsBadProp, Printf.sprintf "invalid property '%s'" propname)
+    else
+      (* We have a supported zfs property. *)
+      let attrs = attributes prop in
+      if not (Array.mem dataset_type attrs.dataset_types) then
+        Error
+          ( EzfsBadProp,
+            Printf.sprintf "'%s' does not apply to datasets of this type"
+              propname )
+      else if attrs.readonly || not (is_encryption_key_param prop && keyok) then
+        Error (EzfsPropReadonly, Printf.sprintf "'%s' is readonly" propname)
+      else if (not create) && attrs.onetime then
+        Error
+          ( EzfsBadProp,
+            Printf.sprintf "property '%s' can only be set at creation time"
+              propname )
+      else
+        match parse_pair attrs with
+        | Ok (String strval) ->
+            let* () =
+              match prop with
+              | Mlslabel ->
+                  (* TODO: MLSLABEL support *)
+                  Error (EzfsBadProp, "mlslabels are unsupported")
+              | Mountpoint ->
+                  if strval = "none" || strval = "legacy" then Ok ()
+                  else if
+                    strval = "" || not (String.starts_with ~prefix:"/" strval)
+                  then
+                    Error
+                      ( EzfsBadProp,
+                        Printf.sprintf
+                          "'%s' must be an absolute path, 'none', or 'legacy'"
+                          propname )
+                  else if
+                    not
+                      (List.for_all
+                         (fun component ->
+                           String.length component < Util.max_name_len)
+                         (String.split_on_char '/' strval))
+                  then
+                    Error
+                      ( EzfsBadProp,
+                        Printf.sprintf "component of '%s' is too long" propname
+                      )
+                  else if zoned && Util.getzoneid () = 0 then
+                    Error
+                      ( EzfsZoned,
+                        Printf.sprintf
+                          "'%s' cannot be set while dataset 'zoned' property \
+                           is set"
+                          propname )
+                  else if (not zoned) && Util.getzoneid () != 0 then
+                    Error
+                      ( EzfsZoned,
+                        Printf.sprintf
+                          "'%s' cannot be set on dataset in a non-global zone"
+                          propname )
+                  else Ok ()
+              | Sharesmb | Sharenfs ->
+                  if zoned && Util.getzoneid () = 0 then
+                    Error
+                      ( EzfsZoned,
+                        Printf.sprintf
+                          "'%s' cannot be set while dataset 'zoned' property \
+                           is set"
+                          propname )
+                  else if (not zoned) && Util.getzoneid () != 0 then
+                    Error
+                      ( EzfsZoned,
+                        Printf.sprintf
+                          "'%s' cannot be set on dataset in a non-global zone"
+                          propname )
+                  else (* TODO: validate share options *)
+                    Ok ()
+              | Keylocation ->
+                  (* TODO: validate keylocation *)
+                  Ok ()
+              | _ -> Ok ()
+            in
+            (* Acceptable string property. *)
+            Ok (propname, String strval)
+        | Ok (Uint64 intval) ->
+            let* () =
+              match prop with
+              | Version ->
+                  (* XXX: Would need a handle to check for downgrade. *)
+                  Ok ()
+              | Volblocksize | Recordsize ->
+                  (* XXX: Would need a handle to check maxblocksize. *)
+                  if
+                    intval < Util.spa_minblocksize
+                    || intval > Util.spa_maxblocksize
+                    || not (Util.ispower2 intval)
+                  then
+                    (* TODO: nicebytes *)
+                    Error
+                      ( EzfsBadProp,
+                        Printf.sprintf
+                          "'%s' must be a power of 2 from 512B to %LuB" propname
+                          Util.spa_maxblocksize )
+                  else Ok ()
+              | Special_small_blocks ->
+                  (* XXX: Would need a handle to check maxblocksize. *)
+                  (* XXX: libzfs checks against volblocksize/recordsize
+                          if set first, but it may not be *)
+                  if
+                    intval != 0L
+                    && (intval < Util.spa_minblocksize
+                       || intval > Util.spa_maxblocksize
+                       || not (Util.ispower2 intval))
+                  then
+                    (* TODO: nicebytes *)
+                    Error
+                      ( EzfsBadProp,
+                        Printf.sprintf
+                          "invalid '%s=%Lu property: must be zero or a power \
+                           of 2 from 512B to %LuB"
+                          propname intval Util.spa_maxblocksize )
+                  else Ok ()
+              | Pbkdf2_iters ->
+                  let min_pbkdf2_iterations = 100000L in
+                  if intval < min_pbkdf2_iterations then
+                    Error
+                      ( EzfsBadProp,
+                        Printf.sprintf "minimum pbkdf2 iterations is %Lu"
+                          min_pbkdf2_iterations )
+                  else Ok ()
+              | Utf8only | Normalize ->
+                  (* XXX: libzfs checks these against each other and sets the
+                          other accordingly if needed. It's not so easy here. *)
+                  Ok ()
+              | _ -> Ok ()
+            in
+            (* Acceptable integer property. *)
+            Ok (propname, Uint64 intval)
+        | Ok (Uint64_array intvals) -> Ok (propname, Uint64_array intvals)
+        | Error what -> Error what
+  in
+  (*
+   * Build up an nvlist that can be passed to the kernel.
+   *)
+  let result = Nvlist.alloc () in
+  let accept = function
+    | propname, String strval -> Nvlist.add_string result propname strval
+    | propname, Uint64 intval -> Nvlist.add_uint64 result propname intval
+    | propname, Uint64_array intvals ->
+        Nvlist.add_uint64_array result propname intvals
+  in
+  let rec iter_pairs prev =
+    match Nvlist.next_nvpair nvl prev with
+    | Some pair -> (
+        match check pair with
+        | Ok acceptable_pair ->
+            accept acceptable_pair;
+            iter_pairs (Some pair)
+        | Error e -> Error e)
+    | None -> Ok result
+  in
+  iter_pairs None
+
 let validate_name name dstypes modifying =
   if (not (Array.mem Snapshot dstypes)) && String.contains name '@' then
     Error "snapshot delimiter '@' is not expected here"
