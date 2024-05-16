@@ -2406,12 +2406,12 @@ let validate nvl dataset_type zoned create keyok =
                     || intval > Const.spa_maxblocksize
                     || not (Util.ispower2 intval)
                   then
-                    (* TODO: nicebytes *)
+                    let nicemin = Util.nicebytes Const.spa_minblocksize in
+                    let nicemax = Util.nicebytes Const.spa_maxblocksize in
                     Error
                       ( EzfsBadProp,
-                        Printf.sprintf
-                          "'%s' must be a power of 2 from 512B to %LuB" propname
-                          Const.spa_maxblocksize )
+                        Printf.sprintf "'%s' must be a power of 2 from %s to %s"
+                          propname nicemin nicemax )
                   else Ok ()
               | Special_small_blocks ->
                   (* XXX: Would need a handle to check maxblocksize. *)
@@ -2423,13 +2423,14 @@ let validate nvl dataset_type zoned create keyok =
                        || intval > Const.spa_maxblocksize
                        || not (Util.ispower2 intval))
                   then
-                    (* TODO: nicebytes *)
+                    let nicemin = Util.nicebytes Const.spa_minblocksize in
+                    let nicemax = Util.nicebytes Const.spa_maxblocksize in
                     Error
                       ( EzfsBadProp,
                         Printf.sprintf
                           "invalid '%s=%Lu property: must be zero or a power \
-                           of 2 from 512B to %LuB"
-                          propname intval Const.spa_maxblocksize )
+                           of 2 from %s to %s"
+                          propname intval nicemin nicemax )
                   else Ok ()
               | Pbkdf2_iters ->
                   let min_pbkdf2_iterations = 100000L in
