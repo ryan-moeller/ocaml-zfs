@@ -107,6 +107,7 @@ let nicenum_format units k_unit num =
     in
     loop 2
 
+let nicenum = nicenum_format [| ""; "K"; "M"; "G"; "T"; "P"; "E" |] 1024L
 let nicebytes = nicenum_format [| "B"; "K"; "M"; "G"; "T"; "P"; "E" |] 1024L
 let version_is_supported v = (v >= 1L && v <= 28L) || v = 5000L
 let isprint c = c >= Char.chr 0x20 && c <= Char.chr 0x7e
