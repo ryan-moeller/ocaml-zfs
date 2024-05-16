@@ -2392,8 +2392,14 @@ let validate nvl dataset_type zoned create keyok =
                   else (* TODO: better validation *)
                     Ok ()
               | Keylocation ->
-                  (* TODO: validate keylocation *)
-                  Ok ()
+                  (* XXX: Would need a handle to check against encryption. *)
+                  if strval = "none" || strval = "prompt" then Ok ()
+                  else if String.starts_with ~prefix:"file:///" strval then
+                    Ok ()
+                  else if String.starts_with ~prefix:"https://" strval then
+                    Ok ()
+                  else if String.starts_with ~prefix:"http://" strval then Ok ()
+                  else Error (EzfsBadProp, "invalid keylocation")
               | _ -> Ok ()
             in
             (* Acceptable string property. *)
