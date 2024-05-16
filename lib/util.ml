@@ -85,6 +85,29 @@ let rec pow x = function
   | n when n mod 2 = 0 -> pow (Int64.mul x x) (n / 2)
   | n -> Int64.mul x (pow (Int64.mul x x) ((n - 1) / 2))
 
+let nicenum_format units k_unit num =
+  let n, i =
+    let rec loop n i =
+      if Int64.unsigned_compare n k_unit < 0 || i >= Array.length units then
+        (n, i)
+      else loop (Int64.unsigned_div n k_unit) (i + 1)
+    in
+    loop num 0
+  in
+  let u = Array.get units i in
+  let denom = pow k_unit i in
+  if i = 0 || Int64.rem num denom = 0L then Printf.sprintf "%Lu%s" n u
+  else
+    let v = Int64.to_float num /. Int64.to_float denom in
+    let rec loop = function
+      | precision when precision > 0 ->
+          let str = Printf.sprintf "%.*f%s" precision v u in
+          if String.length str <= 5 then str else loop (precision - 1)
+      | _ -> Printf.sprintf "%.0f%s" v u
+    in
+    loop 2
+
+let nicebytes = nicenum_format [| "B"; "K"; "M"; "G"; "T"; "P"; "E" |] 1024L
 let version_is_supported v = (v >= 1L && v <= 28L) || v = 5000L
 let isprint c = c >= Char.chr 0x20 && c <= Char.chr 0x7e
 let ispower2 x = Int64.logand x (Int64.sub x 1L) = 0L
