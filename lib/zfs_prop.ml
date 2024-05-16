@@ -2384,7 +2384,12 @@ let validate nvl dataset_type zoned create keyok =
                         Printf.sprintf
                           "'%s' cannot be set on dataset in a non-global zone"
                           propname )
-                  else (* TODO: validate share options *)
+                  else if strval = "" then
+                    Error
+                      ( EzfsBadProp,
+                        Printf.sprintf "'%s' cannot be set to invalid options"
+                          propname )
+                  else (* TODO: better validation *)
                     Ok ()
               | Keylocation ->
                   (* TODO: validate keylocation *)
