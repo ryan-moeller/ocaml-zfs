@@ -77,6 +77,14 @@ let nicestrtonum s =
   | Some result -> result
   | None -> Error (Printf.sprintf "bad numeric value '%s'" s)
 
+(* Exponentiation by squaring. *)
+let rec pow x = function
+  | n when n < 0 -> invalid_arg "exponent must be >= 0"
+  | 0 -> 1L
+  | 1 -> x
+  | n when n mod 2 = 0 -> pow (Int64.mul x x) (n / 2)
+  | n -> Int64.mul x (pow (Int64.mul x x) ((n - 1) / 2))
+
 let version_is_supported v = (v >= 1L && v <= 28L) || v = 5000L
 let isprint c = c >= Char.chr 0x20 && c <= Char.chr 0x7e
 let ispower2 x = Int64.logand x (Int64.sub x 1L) = 0L
