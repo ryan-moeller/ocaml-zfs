@@ -8,3 +8,4 @@ let spa_old_maxblockshift = 17
 let spa_old_maxblocksize = Int64.shift_left 1L spa_old_maxblockshift
 let spa_maxblockshift = 24
 let spa_maxblocksize = Int64.shift_left 1L spa_maxblockshift
+let spa_mindevsize = Int64.shift_left 64L 20
