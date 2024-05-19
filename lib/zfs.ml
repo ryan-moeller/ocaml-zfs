@@ -1,4 +1,5 @@
 module Const = Const
+module Error = Error
 module Ioctls = Ioctls
 module Types = Types
 module Userquota_prop = Userquota_prop

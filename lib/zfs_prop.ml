@@ -2177,7 +2177,7 @@ type checked_value =
   | Uint64_array of int64 array
 
 let validate nvl dataset_type zoned create keyok =
-  let open Types in
+  let open Error in
   let open Nvpair in
   let ( let* ) = Result.bind in
   (*

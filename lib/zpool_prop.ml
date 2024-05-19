@@ -700,7 +700,7 @@ let load_compat compat =
 type checked_value = String of string | Uint64 of int64
 
 let validate nvl poolname version create import =
-  let open Types in
+  let open Error in
   let open Nvpair in
   let ( let* ) = Result.bind in
   let ( >>= ) = Result.bind in
