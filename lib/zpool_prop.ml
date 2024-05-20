@@ -996,3 +996,15 @@ let validate_name name opening =
   else if not (Str.string_match valid_first_char name 0) then
     Error "name must begin with a letter"
   else Ok ()
+
+let has_special_vdev nvl =
+  let open Nvpair in
+  match Nvlist.lookup_nvlist_array nvl "children" with
+  | None -> false
+  | Some children ->
+      Array.exists
+        (fun child ->
+          match Nvlist.lookup_string child "alloc_bias" with
+          | Some "special" -> true
+          | _ -> false)
+        children

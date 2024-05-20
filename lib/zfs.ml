@@ -52,11 +52,22 @@ module Zpool = struct
             let keyok = true in
             match Zfs_prop.validate fsprops dataset_type zoned create keyok with
             | Ok fsprops ->
-                (* TODO: check special vdev *)
-                (* TODO: crypto create *)
-                let props = Option.get props_opt in
-                Nvlist.add_nvlist props "root-props-nvl" fsprops;
-                Ok ()
+                let propname =
+                  Zfs_prop.to_string Zfs_prop.Special_small_blocks
+                in
+                if
+                  Nvlist.exists fsprops propname
+                  && not (Zpool_prop.has_special_vdev config)
+                then
+                  Error
+                    ( EzfsBadProp,
+                      Printf.sprintf "%s property requires a special vdev"
+                        propname )
+                else
+                  (* TODO: crypto create *)
+                  let props = Option.get props_opt in
+                  Nvlist.add_nvlist props "root-props-nvl" fsprops;
+                  Ok ()
             | Error e -> Error e
           else Ok ()
         in
