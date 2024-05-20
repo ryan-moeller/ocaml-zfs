@@ -48,19 +48,19 @@ let decode_propname s zoned =
          of_string_opt propname >>= fun prop ->
          match prop with
          | Userused | Userquota | Userobjused | Userobjquota -> (
-             match Util.getpwnam ident with
-             | Ok (Some pw) ->
-                 if zoned && Util.getzoneid () != 0 then None
-                 else Some (prop, pw.uid)
-             | Ok None -> Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid))
-             | Error e -> raise (Unix.Unix_error (e, "getpwnam", ident)))
+             try
+               let pw = Unix.getpwnam ident in
+               if zoned && Util.getzoneid () != 0 then None
+               else Some (prop, pw.pw_uid)
+             with Not_found ->
+               Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
          | Groupused | Groupquota | Groupobjused | Groupobjquota -> (
-             match Util.getgrnam ident with
-             | Ok (Some gr) ->
-                 if zoned && Util.getzoneid () != 0 then None
-                 else Some (prop, gr.gid)
-             | Ok None -> Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid))
-             | Error e -> raise (Unix.Unix_error (e, "getgrnam", ident)))
+             try
+               let gr = Unix.getgrnam ident in
+               if zoned && Util.getzoneid () != 0 then None
+               else Some (prop, gr.gr_gid)
+             with Not_found ->
+               Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
          | Projectused | Projectquota | Projectobjused | Projectobjquota ->
              Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
 
