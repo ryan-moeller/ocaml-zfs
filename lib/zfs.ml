@@ -91,9 +91,6 @@ module Zpool = struct
                 (Util.nicebytes Const.spa_mindevsize) )
       | Error Unix.ENOSPC ->
           Error (EzfsBadDev, "one or more devices is out of space")
-      | Error Unix.EINVAL ->
-          (* TODO: has draid vdev / feature draid check *)
-          Error (zpool_standard_error Unix.EINVAL)
       | Error e -> Error (zpool_standard_error e)
     with
     | Ok () -> Ok ()
