@@ -1,4 +1,4 @@
-type t =
+type zfs_error =
   | EzfsActivePool
   | EzfsActiveSpare
   | EzfsAshiftMismatch
@@ -411,3 +411,178 @@ let to_string = function
   | EzfsVolTooBig -> "volume size exceeds limits for this system"
   | EzfsWrongParent -> "invalid parent dataset"
   | EzfsZoned -> "dataset in use by local zone"
+
+type zfs_errno =
+  | ZfsErrAshiftMismatch
+  | ZfsErrBadProp
+  | ZfsErrBookmarkSourceNotAncestor
+  | ZfsErrCheckpointExists
+  | ZfsErrCryptoNotSup
+  | ZfsErrDevRmInProgress
+  | ZfsErrDiscardingCheckpoint
+  | ZfsErrExportInProgress
+  | ZfsErrFromIvsetGuidMismatch
+  | ZfsErrFromIvsetGuidMissing
+  | ZfsErrIocArgBadType
+  | ZfsErrIocArgRequired
+  | ZfsErrIocArgUnavail
+  | ZfsErrIocCmdUnavail
+  | ZfsErrNoCheckpoint
+  | ZfsErrNotUserNamespace
+  | ZfsErrRaidzExpandInProgress
+  | ZfsErrRebuildInProgress
+  | ZfsErrResilverInProgress
+  | ZfsErrResumeExists
+  | ZfsErrSpillBlockFlagMissing
+  | ZfsErrStreamLargeBlockMismatch
+  | ZfsErrStreamTruncated
+  | ZfsErrUnknownSendStreamFeature
+  | ZfsErrVdevNotSup
+  | ZfsErrVdevTooBig
+  | ZfsErrWrongParent
+
+let zfs_errno_to_int = function
+  | ZfsErrAshiftMismatch -> 1050
+  | ZfsErrBadProp -> 1044
+  | ZfsErrBookmarkSourceNotAncestor -> 1039
+  | ZfsErrCheckpointExists -> 1024
+  | ZfsErrCryptoNotSup -> 1048
+  | ZfsErrDevRmInProgress -> 1027
+  | ZfsErrDiscardingCheckpoint -> 1025
+  | ZfsErrExportInProgress -> 1038
+  | ZfsErrFromIvsetGuidMismatch -> 1035
+  | ZfsErrFromIvsetGuidMissing -> 1034
+  | ZfsErrIocArgBadType -> 1032
+  | ZfsErrIocArgRequired -> 1031
+  | ZfsErrIocArgUnavail -> 1030
+  | ZfsErrIocCmdUnavail -> 1029
+  | ZfsErrNoCheckpoint -> 1026
+  | ZfsErrNotUserNamespace -> 1046
+  | ZfsErrRaidzExpandInProgress -> 1049
+  | ZfsErrRebuildInProgress -> 1043
+  | ZfsErrResilverInProgress -> 1042
+  | ZfsErrResumeExists -> 1047
+  | ZfsErrSpillBlockFlagMissing -> 1036
+  | ZfsErrStreamLargeBlockMismatch -> 1041
+  | ZfsErrStreamTruncated -> 1040
+  | ZfsErrUnknownSendStreamFeature -> 1037
+  | ZfsErrVdevNotSup -> 1045
+  | ZfsErrVdevTooBig -> 1028
+  | ZfsErrWrongParent -> 1033
+
+let zfs_errno_of_int_opt = function
+  | 1024 -> Some ZfsErrCheckpointExists
+  | 1025 -> Some ZfsErrDiscardingCheckpoint
+  | 1026 -> Some ZfsErrNoCheckpoint
+  | 1027 -> Some ZfsErrDevRmInProgress
+  | 1028 -> Some ZfsErrVdevTooBig
+  | 1029 -> Some ZfsErrIocCmdUnavail
+  | 1030 -> Some ZfsErrIocArgUnavail
+  | 1031 -> Some ZfsErrIocArgRequired
+  | 1032 -> Some ZfsErrIocArgBadType
+  | 1033 -> Some ZfsErrWrongParent
+  | 1034 -> Some ZfsErrFromIvsetGuidMissing
+  | 1035 -> Some ZfsErrFromIvsetGuidMismatch
+  | 1036 -> Some ZfsErrSpillBlockFlagMissing
+  | 1037 -> Some ZfsErrUnknownSendStreamFeature
+  | 1038 -> Some ZfsErrExportInProgress
+  | 1039 -> Some ZfsErrBookmarkSourceNotAncestor
+  | 1040 -> Some ZfsErrStreamTruncated
+  | 1041 -> Some ZfsErrStreamLargeBlockMismatch
+  | 1042 -> Some ZfsErrResilverInProgress
+  | 1043 -> Some ZfsErrRebuildInProgress
+  | 1044 -> Some ZfsErrBadProp
+  | 1045 -> Some ZfsErrVdevNotSup
+  | 1046 -> Some ZfsErrNotUserNamespace
+  | 1047 -> Some ZfsErrResumeExists
+  | 1048 -> Some ZfsErrCryptoNotSup
+  | 1049 -> Some ZfsErrRaidzExpandInProgress
+  | 1050 -> Some ZfsErrAshiftMismatch
+  | _ -> None
+
+let zfs_common_error = function
+  | Unix.EFAULT -> Some EzfsFault
+  | Unix.EINTR -> Some EzfsIntr
+  | Unix.EIO -> Some EzfsIo
+  | Unix.EPERM | Unix.EACCES -> Some EzfsPerm
+  | Unix.EUNKNOWNERR 85 (* ECANCELED *) -> Some EzfsNoDelegation
+  | Unix.EUNKNOWNERR 97 (* EINTEGRITY (ECKSUM) *) -> Some EzfsCksum
+  | _ -> None
+
+let zpool_standard_error eunix =
+  let error_info =
+    match zfs_common_error eunix with
+    | Some ezfs -> (ezfs, None)
+    | None -> (
+        match eunix with
+        | Unix.ENODEV -> (EzfsNoDevice, None)
+        | Unix.ENOENT -> (EzfsNoEnt, None)
+        | Unix.EEXIST -> (EzfsExists, Some "pool already exists")
+        | Unix.EBUSY -> (EzfsBusy, Some "pool is busy")
+        | Unix.EUNKNOWNERR 85 (* ECANCELED (ENOTACTIVE) *) ->
+            (EzfsNoPending, None)
+        | Unix.ENXIO ->
+            (EzfsBadDev, Some "one or more devices is currently unavailable")
+        | Unix.ENAMETOOLONG -> (EzfsDevOverflow, None)
+        | Unix.EOPNOTSUPP -> (EzfsPoolNotSup, None)
+        | Unix.EINVAL -> (EzfsPoolInvalArg, None)
+        | Unix.ENOSPC | Unix.EUNKNOWNERR 69 (* EDQUOT *) -> (EzfsNoSpc, None)
+        | Unix.EAGAIN ->
+            (EzfsPoolUnavail, Some "pool I/O is currently suspended")
+        | Unix.EROFS -> (EzfsPoolReadonly, None)
+        | Unix.EDOM ->
+            (EzfsBadProp, Some "block size out of range or does not match")
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrCheckpointExists ->
+            (EzfsCheckpointExists, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrDiscardingCheckpoint ->
+            (EzfsDiscardingCheckpoint, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrNoCheckpoint ->
+            (EzfsNoCheckpoint, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrDevRmInProgress ->
+            (EzfsDevRmInProgress, None)
+        | Unix.EUNKNOWNERR errno when errno = zfs_errno_to_int ZfsErrVdevTooBig
+          ->
+            (EzfsVdevTooBig, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrExportInProgress ->
+            (EzfsExportInProgress, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrResilverInProgress ->
+            (EzfsResilvering, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrRebuildInProgress ->
+            (EzfsRebuilding, None)
+        | Unix.EUNKNOWNERR errno when errno = zfs_errno_to_int ZfsErrBadProp ->
+            (EzfsBadProp, None)
+        | Unix.EUNKNOWNERR errno when errno = zfs_errno_to_int ZfsErrVdevNotSup
+          ->
+            (EzfsVdevNotSup1, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrIocCmdUnavail ->
+            ( EzfsIocNotSupported,
+              Some "the loaded zfs module does not support this operation" )
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrIocArgUnavail ->
+            ( EzfsIocNotSupported,
+              Some
+                "the loaded zfs module does not support an option for this \
+                 operation" )
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrIocArgRequired ->
+            (EzfsIocNotSupported, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrIocArgBadType ->
+            (EzfsIocNotSupported, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrRaidzExpandInProgress ->
+            (EzfsRaidzExpandInProgress, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrAshiftMismatch ->
+            (EzfsAshiftMismatch, None)
+        | _ -> (EzfsUnknown, None))
+  in
+  match error_info with e, Some msg -> (e, msg) | e, None -> (e, to_string e)
