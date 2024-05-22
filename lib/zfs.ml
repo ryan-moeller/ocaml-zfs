@@ -21,7 +21,7 @@ module Zpool = struct
         Zpool_prop.validate_name poolname false
         |> Result.map_error (fun why -> (EzfsInvalidName, why))
       in
-      let packed_config = Nvlist.pack config Nvlist.Native in
+      let packed_config = Nvlist.(pack config Native) in
       let* packed_props_opt =
         let* props_opt =
           match propsopt with
@@ -42,7 +42,7 @@ module Zpool = struct
           if Option.is_some fspropsopt then
             let fsprops = Option.get fspropsopt in
             let zoned =
-              let propname = Zfs_prop.to_string Zfs_prop.Zoned in
+              let propname = Zfs_prop.(to_string Zoned) in
               match Nvlist.lookup_string fsprops propname with
               | Some "on" -> true
               | _ -> false
@@ -52,9 +52,7 @@ module Zpool = struct
             let keyok = true in
             match Zfs_prop.validate fsprops dataset_type zoned create keyok with
             | Ok fsprops ->
-                let propname =
-                  Zfs_prop.to_string Zfs_prop.Special_small_blocks
-                in
+                let propname = Zfs_prop.(to_string Special_small_blocks) in
                 if
                   Nvlist.exists fsprops propname
                   && not (Zpool_prop.has_special_vdev config)
@@ -71,7 +69,7 @@ module Zpool = struct
             | Error e -> Error e
           else Ok ()
         in
-        Ok (Option.map (fun props -> Nvlist.pack props Nvlist.Native) props_opt)
+        Ok (Option.map (fun props -> Nvlist.(pack props Native)) props_opt)
       in
       match
         Ioctls.pool_create handle poolname packed_config packed_props_opt
