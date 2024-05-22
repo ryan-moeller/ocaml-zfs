@@ -98,4 +98,26 @@ module Zpool = struct
     | Error (e, why) ->
         let error_msg = Printf.sprintf "cannot create '%s'" poolname in
         Error (e, error_msg, why)
+
+  let destroy handle name log_msg =
+    let mountpoint =
+      (* TODO: Zfs.get_props, Zpool.get_props *)
+      None
+    in
+    match
+      match Ioctls.pool_destroy handle name log_msg with
+      | Ok () -> (
+          match mountpoint with
+          | Some path ->
+              ignore (Unix.rmdir path);
+              Ok ()
+          | None -> Ok ())
+      | Error Unix.EROFS ->
+          Error (EzfsBadDev, "one or more devices is read only")
+      | Error e -> Error (zpool_standard_error e)
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let error_msg = Printf.sprintf "cannot destroy '%s'" name in
+        Error (e, error_msg, why)
 end
