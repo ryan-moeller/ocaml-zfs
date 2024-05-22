@@ -2526,3 +2526,14 @@ let validate_name name dstypes modifying =
         in
         if ndelim > 1 then Error "multiple '@' and/or '#' delimiters in name"
         else Ok ()
+
+let has_encryption_props nvl =
+  let open Nvpair in
+  (match Nvlist.lookup_uint64 nvl (to_string Encryption) with
+  | Some encryption when encryption != 0L -> true
+  | _ -> false)
+  || (match Nvlist.lookup_string nvl (to_string Keylocation) with
+     | Some keylocation when keylocation != "none" -> true
+     | _ -> false)
+  || Nvlist.exists nvl (to_string Keyformat)
+  || Nvlist.exists nvl (to_string Pbkdf2_iters)

@@ -62,10 +62,13 @@ module Zpool = struct
                       Printf.sprintf "%s property requires a special vdev"
                         propname )
                 else
-                  (* TODO: crypto create *)
                   let props = Option.get props_opt in
-                  Nvlist.add_nvlist props "root-props-nvl" fsprops;
-                  Ok ()
+                  (* TODO: crypto create *)
+                  if Zfs_prop.has_encryption_props props then
+                    Error (EzfsBadProp, "encryption is TODO")
+                  else (
+                    Nvlist.add_nvlist props "root-props-nvl" fsprops;
+                    Ok ())
             | Error e -> Error e
           else Ok ()
         in
