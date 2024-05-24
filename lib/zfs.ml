@@ -99,13 +99,13 @@ module Zpool = struct
         let error_msg = Printf.sprintf "cannot create '%s'" poolname in
         Error (e, error_msg, why)
 
-  let destroy handle name log_msg =
+  let destroy handle poolname logmsg =
     let mountpoint =
       (* TODO: Zfs.get_props, Zpool.get_props *)
       None
     in
     match
-      match Ioctls.pool_destroy handle name log_msg with
+      match Ioctls.pool_destroy handle poolname logmsg with
       | Ok () -> (
           match mountpoint with
           | Some path ->
@@ -118,6 +118,6 @@ module Zpool = struct
     with
     | Ok () -> Ok ()
     | Error (e, why) ->
-        let error_msg = Printf.sprintf "cannot destroy '%s'" name in
+        let error_msg = Printf.sprintf "cannot destroy '%s'" poolname in
         Error (e, error_msg, why)
 end
