@@ -14,6 +14,17 @@ open Nvpair
 let open_handle = Ioctls.open_handle
 
 module Zpool = struct
+  let get_props handle poolname =
+    match
+      Ioctls.pool_get_props handle poolname
+      |> Result.map Nvlist.unpack
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok props -> Ok props
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot get props for pool '%s'" poolname in
+        Error (e, what, why)
+
   let create handle poolname config propsopt fspropsopt =
     let ( let* ) = Result.bind in
     match
