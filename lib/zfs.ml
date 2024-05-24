@@ -96,8 +96,8 @@ module Zpool = struct
     with
     | Ok () -> Ok ()
     | Error (e, why) ->
-        let error_msg = Printf.sprintf "cannot create '%s'" poolname in
-        Error (e, error_msg, why)
+        let what = Printf.sprintf "cannot create '%s'" poolname in
+        Error (e, what, why)
 
   let destroy handle poolname logmsg =
     let mountpoint =
@@ -118,6 +118,6 @@ module Zpool = struct
     with
     | Ok () -> Ok ()
     | Error (e, why) ->
-        let error_msg = Printf.sprintf "cannot destroy '%s'" poolname in
-        Error (e, error_msg, why)
+        let what = Printf.sprintf "cannot destroy '%s'" poolname in
+        Error (e, what, why)
 end
