@@ -36,15 +36,12 @@ module Zpool = struct
       let* packed_props_opt =
         let* props_opt =
           match propsopt with
-          | Some props -> (
+          | Some props ->
               let version = 1L in
               let create = true in
               let import = false in
-              match
-                Zpool_prop.validate props poolname version create import
-              with
-              | Ok props -> Ok (Some props)
-              | Error e -> Error e)
+              Zpool_prop.validate props poolname version create import
+              |> Result.map Option.some
           | None ->
               if Option.is_some fspropsopt then Ok (Some (Nvlist.alloc ()))
               else Ok None
