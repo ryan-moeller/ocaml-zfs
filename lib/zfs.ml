@@ -25,6 +25,25 @@ module Zpool = struct
         let what = Printf.sprintf "cannot get props for pool '%s'" poolname in
         Error (e, what, why)
 
+  let set_props_version handle poolname props version =
+    let ( let* ) = Result.bind in
+    match
+      let* props = Zpool_prop.validate props poolname version false false in
+      let packed_props = Nvlist.(pack props Native) in
+      Ioctls.pool_set_props handle poolname packed_props
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot set props for pool '%s'" poolname in
+        Error (e, what, why)
+
+  let set_props handle poolname props =
+    let ( let* ) = Result.bind in
+    let* oldprops = get_props handle poolname in
+    Option.get @@ Nvlist.lookup_uint64 oldprops Zpool_prop.(to_string Version)
+    |> set_props_version handle poolname props
+
   let create handle poolname config propsopt fspropsopt =
     let ( let* ) = Result.bind in
     match
