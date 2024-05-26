@@ -28,7 +28,9 @@ module Zpool = struct
   let set_props_version handle poolname props version =
     let ( let* ) = Result.bind in
     match
-      let* props = Zpool_prop.validate props poolname version false false in
+      let create = false in
+      let import = false in
+      let* props = Zpool_prop.validate props poolname version create import in
       let packed_props = Nvlist.(pack props Native) in
       Ioctls.pool_set_props handle poolname packed_props
       |> Result.map_error zpool_standard_error
