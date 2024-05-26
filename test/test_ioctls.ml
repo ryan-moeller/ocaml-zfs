@@ -410,7 +410,8 @@ let () =
       let conf = Nvlist.unpack packed_conf in
       let name = Option.get @@ Nvlist.lookup_string conf "name" in
       Printf.printf "imported pool: %s\n" name
-  | Error e ->
+  | Error (packed_conf, e) ->
+      let _conf = Nvlist.unpack packed_conf in
       Printf.eprintf "pool_import failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs
@@ -1018,7 +1019,8 @@ let () =
         [| ImportOnly |]
     with
     | Ok packed_config -> Nvlist.unpack packed_config
-    | Error e ->
+    | Error (packed_config, e) ->
+        let _config = Nvlist.unpack packed_config in
         Printf.eprintf "pool_import failed (obj_to_path)\n";
         failwith @@ Unix.error_message e
   in

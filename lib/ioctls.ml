@@ -21,7 +21,7 @@ external pool_import :
   bytes ->
   bytes option ->
   import_flags array ->
-  (bytes, Unix.error) result
+  (bytes, bytes * Unix.error) result
   = "caml_zfs_ioc_pool_import_bytecode" "caml_zfs_ioc_pool_import_native"
 
 (* pool_export handle name force hardforce log_str *)

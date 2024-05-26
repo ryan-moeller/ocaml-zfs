@@ -167,7 +167,7 @@ caml_zfs_ioc_pool_import_native(value handle, value name, value guid,
 {
 	CAMLparam5 (handle, name, guid, config, props_opt);
 	CAMLxparam1 (flags);
-	CAMLlocal2 (props, ret);
+	CAMLlocal3 (props, tuple, ret);
 	zfs_cmd_t zc = {"\0"};
 	int fd, err;
 
@@ -209,10 +209,14 @@ caml_zfs_ioc_pool_import_native(value handle, value name, value guid,
 	}
 	caml_acquire_runtime_system();
 	if (err) {
-		void *p = (void *)zc.zc_nvlist_dst;
-		free(p);
+		char *p = (char *)zc.zc_nvlist_dst;
+		size_t len = (size_t)zc.zc_nvlist_dst_size;
+		tuple = caml_alloc_tuple(2);
+		Store_field(tuple, 0, caml_alloc_initialized_string(len, p));
+		Store_field(tuple, 1, caml_unix_error_of_code(err));
 		ret = caml_alloc(1, 1);
-		Store_field(ret, 0, caml_unix_error_of_code(err));
+		Store_field(ret, 0, tuple);
+		free(p);
 	} else {
 		char *p = (char *)zc.zc_nvlist_dst;
 		size_t len = (size_t)zc.zc_nvlist_dst_size;
