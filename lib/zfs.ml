@@ -169,4 +169,23 @@ module Zpool = struct
           Printf.sprintf "cannot discard checkpoint in '%s'" poolname
         in
         Error (e, what, why)
+
+  let export handle poolname force hardforce logmsg =
+    match
+      match Ioctls.pool_export handle poolname force hardforce logmsg with
+      | Ok () -> Ok ()
+      | Error Unix.EXDEV ->
+          let why =
+            Printf.sprintf
+              "'%s' has an active shared spare which could be used by other \
+               pools once '%s' is exported"
+              poolname poolname
+          in
+          Error (EzfsActiveSpare, why)
+      | Error e -> Error (zpool_standard_error e)
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot export '%s'" poolname in
+        Error (e, what, why)
 end
