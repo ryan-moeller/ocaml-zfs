@@ -147,4 +147,26 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "cannot destroy '%s'" poolname in
         Error (e, what, why)
+
+  let checkpoint handle poolname =
+    match
+      Ioctls.pool_checkpoint handle poolname
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot checkpoint '%s'" poolname in
+        Error (e, what, why)
+
+  let discard_checkpoint handle poolname =
+    match
+      Ioctls.pool_discard_checkpoint handle poolname
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what =
+          Printf.sprintf "cannot discard checkpoint in '%s'" poolname
+        in
+        Error (e, what, why)
 end
