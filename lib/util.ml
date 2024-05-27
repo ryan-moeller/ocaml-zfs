@@ -84,3 +84,67 @@ let nicebytes = nicenum_format [| "B"; "K"; "M"; "G"; "T"; "P"; "E" |] 1024L
 let version_is_supported v = (v >= 1L && v <= 28L) || v = 5000L
 let isprint c = c >= Char.chr 0x20 && c <= Char.chr 0x7e
 let ispower2 x = Int64.logand x (Int64.sub x 1L) = 0L
+
+let rec format_vdev_tree nvl s nameopt indent =
+  let open Nvpair in
+  let is_log =
+    match Nvlist.lookup_uint64 nvl "is_log" with Some 1L -> true | _ -> false
+  in
+  let s =
+    match nameopt with
+    | Some name ->
+        Printf.sprintf "%s\t%*s%s%s\n" s indent "" name
+          (if is_log then " [log]" else "")
+    | None -> s
+  in
+  match Nvlist.lookup_nvlist_array nvl "children" with
+  | Some children ->
+      (* TODO: formatting env vars *)
+      let format_vdev child s =
+        let name =
+          if Nvlist.exists child "not_present" then
+            Nvlist.lookup_uint64 child "guid"
+            |> Option.get |> Printf.sprintf "%Lu"
+          else
+            let vdev_type = Option.get @@ Nvlist.lookup_string child "type" in
+            match Nvlist.lookup_string child "path" with
+            | Some path ->
+                if vdev_type = "disk" then
+                  let prefix = "/dev/" in
+                  if String.starts_with ~prefix path then
+                    let pos = String.length prefix in
+                    let len = String.length path - pos in
+                    String.sub path pos len
+                  else path
+                else path
+            | None ->
+                let path =
+                  if vdev_type = "raidz" then
+                    Nvlist.lookup_uint64 child "nparity"
+                    |> Option.get
+                    |> Printf.sprintf "%s%Lu" vdev_type
+                  else if vdev_type = "draid" then
+                    let children =
+                      Option.get @@ Nvlist.lookup_nvlist_array child "children"
+                    in
+                    let nchildren = Array.length children in
+                    let nparity =
+                      Option.get @@ Nvlist.lookup_uint64 child "nparity"
+                    in
+                    let ndata =
+                      Option.get @@ Nvlist.lookup_uint64 child "draid_ndata"
+                    in
+                    let nspares =
+                      Option.get @@ Nvlist.lookup_uint64 child "draid_nspares"
+                    in
+                    Printf.sprintf "draid%Lu:%Lud:%uc:%Lus" nparity ndata
+                      nchildren nspares
+                  else vdev_type
+                in
+                let id = Option.get @@ Nvlist.lookup_uint64 child "id" in
+                Printf.sprintf "%s-%Lu" path id
+        in
+        format_vdev_tree child s (Some name) (indent + 2)
+      in
+      Array.fold_right format_vdev children ""
+  | None -> s
