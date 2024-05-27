@@ -148,3 +148,40 @@ let rec format_vdev_tree nvl s nameopt indent =
       in
       Array.fold_right format_vdev children ""
   | None -> s
+
+let get_load_policy config =
+  let open Nvpair in
+  let policies = 31l in
+  let default =
+    {
+      rewind = 1l (* ZPOOL_NO_REWIND *);
+      maxmeta = 0L;
+      maxdata = -1L;
+      txg = -1L;
+    }
+  in
+  match Nvlist.lookup_nvlist config "load-policy" with
+  | Some policy ->
+      let rewind =
+        Nvlist.lookup_uint32 policy "load-rewind-policy"
+        |> Option.value ~default:default.rewind
+      in
+      let rewind =
+        if Int32.logand rewind (Int32.lognot policies) != 0l then default.rewind
+        else if rewind = 0l then default.rewind
+        else rewind
+      in
+      let maxmeta =
+        Nvlist.lookup_uint64 policy "load-meta-thresh"
+        |> Option.value ~default:default.maxmeta
+      in
+      let maxdata =
+        Nvlist.lookup_uint64 policy "load-data-threash"
+        |> Option.value ~default:default.maxdata
+      in
+      let txg =
+        Nvlist.lookup_uint64 policy "load-request-txg"
+        |> Option.value ~default:default.txg
+      in
+      { rewind; maxmeta; maxdata; txg }
+  | None -> default
