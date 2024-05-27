@@ -121,7 +121,7 @@ module Zpool = struct
                 (Util.nicebytes Const.spa_mindevsize) )
       | Error Unix.ENOSPC ->
           Error (EzfsBadDev, "one or more devices is out of space")
-      | Error e -> Error (zpool_standard_error e)
+      | Error errno -> Error (zpool_standard_error errno)
     with
     | Ok () -> Ok ()
     | Error (e, why) ->
@@ -143,7 +143,7 @@ module Zpool = struct
           | None -> Ok ())
       | Error Unix.EROFS ->
           Error (EzfsBadDev, "one or more devices is read only")
-      | Error e -> Error (zpool_standard_error e)
+      | Error errno -> Error (zpool_standard_error errno)
     with
     | Ok () -> Ok ()
     | Error (e, why) ->
@@ -184,7 +184,7 @@ module Zpool = struct
               poolname poolname
           in
           Error (EzfsActiveSpare, why)
-      | Error e -> Error (zpool_standard_error e)
+      | Error errno -> Error (zpool_standard_error errno)
     with
     | Ok () -> Ok ()
     | Error (e, why) ->
@@ -225,9 +225,9 @@ module Zpool = struct
           flags
       with
       | Ok packed_config -> Ok (Nvlist.unpack packed_config)
-      | Error (packed_errors, e) -> (
+      | Error (packed_errors, errno) -> (
           let errors = Nvlist.unpack packed_errors in
-          match e with
+          match errno with
           | Unix.EOPNOTSUPP -> (
               match Nvlist.lookup_nvlist errors "load_info" with
               | Some info -> (
@@ -313,9 +313,9 @@ module Zpool = struct
                         ^ missing
                       in
                       Error (EzfsBadDev, why)
-                  | None -> Error (zpool_standard_error e))
-              | None -> Error (zpool_standard_error e))
-          | Unix.EEXIST -> Error (zpool_standard_error e)
+                  | None -> Error (zpool_standard_error errno))
+              | None -> Error (zpool_standard_error errno))
+          | Unix.EEXIST -> Error (zpool_standard_error errno)
           | Unix.EBUSY ->
               Error (EzfsBadDev, "one or more devices are already in use")
           | Unix.ENAMETOOLONG ->
@@ -323,7 +323,7 @@ module Zpool = struct
                 ( EzfsNameTooLong,
                   "new name of at least one dataset is longer than the maximum \
                    allowable length" )
-          | _ -> Error (zpool_standard_error e)
+          | _ -> Error (zpool_standard_error errno)
           (* TODO: zpool_explain_recover? *))
     with
     | Ok config -> Ok config

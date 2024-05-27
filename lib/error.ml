@@ -509,12 +509,12 @@ let zfs_common_error = function
   | Unix.EUNKNOWNERR 97 (* EINTEGRITY (ECKSUM) *) -> Some EzfsCksum
   | _ -> None
 
-let zpool_standard_error eunix =
+let zpool_standard_error errno =
   let error_info =
-    match zfs_common_error eunix with
+    match zfs_common_error errno with
     | Some ezfs -> (ezfs, None)
     | None -> (
-        match eunix with
+        match errno with
         | Unix.ENODEV -> (EzfsNoDevice, None)
         | Unix.ENOENT -> (EzfsNoEnt, None)
         | Unix.EEXIST -> (EzfsExists, Some "pool already exists")
