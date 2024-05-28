@@ -335,4 +335,15 @@ module Zpool = struct
           | None -> Printf.sprintf "cannot import '%s'" origname
         in
         Error (e, what, why)
+
+  let configs handle nsgen =
+    match
+      Ioctls.pool_configs handle nsgen |> Result.map_error zpool_standard_error
+    with
+    | Ok None -> Ok None
+    | Ok (Some (nsgen, packed_configs)) ->
+        Ok (Some (nsgen, Nvlist.unpack packed_configs))
+    | Error (e, why) ->
+        let what = "failed to read pool configuration" in
+        Error (e, what, why)
 end

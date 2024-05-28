@@ -583,6 +583,6 @@ let zpool_standard_error errno =
         | Unix.EUNKNOWNERR errno
           when errno = zfs_errno_to_int ZfsErrAshiftMismatch ->
             (EzfsAshiftMismatch, None)
-        | _ -> (EzfsUnknown, None))
+        | _ -> (EzfsUnknown, Some (Unix.error_message errno)))
   in
   match error_info with e, Some msg -> (e, msg) | e, None -> (e, to_string e)
