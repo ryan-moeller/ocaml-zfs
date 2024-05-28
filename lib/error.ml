@@ -509,6 +509,52 @@ let zfs_common_error = function
   | Unix.EUNKNOWNERR 97 (* EINTEGRITY (ECKSUM) *) -> Some EzfsCksum
   | _ -> None
 
+let zfs_standard_error errno =
+  let error_info =
+    match zfs_common_error errno with
+    | Some ezfs -> (ezfs, None)
+    | None -> (
+        match errno with
+        | Unix.ENXIO | Unix.ENODEV | Unix.EPIPE -> (EzfsIo, None)
+        | Unix.ENOENT -> (EzfsNoEnt, Some "dataset does not exist")
+        | Unix.ENOSPC | Unix.EUNKNOWNERR 69 (* EDQUOT *) -> (EzfsNoSpc, None)
+        | Unix.EEXIST -> (EzfsExists, Some "dataset already exists")
+        | Unix.EBUSY -> (EzfsBusy, Some "dataset is busy")
+        | Unix.EROFS -> (EzfsPoolReadonly, None)
+        | Unix.ENAMETOOLONG -> (EzfsNameTooLong, None)
+        | Unix.EOPNOTSUPP -> (EzfsBadVersion, None)
+        | Unix.EAGAIN ->
+            (EzfsPoolUnavail, Some "pool I/O is currently suspended")
+        | Unix.EUNKNOWNERR 71 (* EREMOTE (EREMOTEIO) *) -> (EzfsActivePool, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrUnknownSendStreamFeature
+               || errno = zfs_errno_to_int ZfsErrIocCmdUnavail ->
+            ( EzfsIocNotSupported,
+              Some
+                "the loaded zfs module does not support this operation. A \
+                 reboot may be required to enable this operation." )
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrIocArgUnavail ->
+            ( EzfsIocNotSupported,
+              Some
+                "the loaded zfs module does not support an option for this \
+                 operation. A reboot may be required to enable this option." )
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrIocArgRequired
+               || errno = zfs_errno_to_int ZfsErrIocArgBadType ->
+            (EzfsIocNotSupported, None)
+        | Unix.EUNKNOWNERR errno when errno = zfs_errno_to_int ZfsErrWrongParent
+          ->
+            (EzfsWrongParent, None)
+        | Unix.EUNKNOWNERR errno when errno = zfs_errno_to_int ZfsErrBadProp ->
+            (EzfsBadProp, None)
+        | Unix.EUNKNOWNERR errno
+          when errno = zfs_errno_to_int ZfsErrNotUserNamespace ->
+            (EzfsNotUserNamespace, None)
+        | _ -> (EzfsUnknown, Some (Unix.error_message errno)))
+  in
+  match error_info with e, Some msg -> (e, msg) | e, None -> (e, to_string e)
+
 let zpool_standard_error errno =
   let error_info =
     match zfs_common_error errno with
