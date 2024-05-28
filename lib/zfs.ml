@@ -241,7 +241,7 @@ module Zpool = struct
                               let desc = Nvpair.value_string pair in
                               let s =
                                 if String.length desc > 0 then
-                                  Printf.sprintf "\t%s (%s)\t" name desc
+                                  Printf.sprintf "\t%s (%s)\n" name desc
                                 else Printf.sprintf "\t%s\n" name
                               in
                               format_feature_list (Some pair) (s :: list)
