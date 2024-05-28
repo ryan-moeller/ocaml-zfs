@@ -338,6 +338,7 @@ module Zpool = struct
 
   let configs handle nsgen =
     match
+      (* XXX: libzfs uses zfs_standard_error here *)
       Ioctls.pool_configs handle nsgen |> Result.map_error zpool_standard_error
     with
     | Ok None -> Ok None
