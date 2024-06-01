@@ -130,7 +130,7 @@ module Zpool = struct
 
   let destroy handle poolname logmsg =
     let mountpoint =
-      (* TODO: Zfs.get_props, Zpool.get_props *)
+      (* TODO: Zfs.get_props *)
       None
     in
     match
