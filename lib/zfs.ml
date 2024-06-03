@@ -370,4 +370,14 @@ module Zpool = struct
         let e, why = zpool_standard_error errno in
         let what = "failed to read pool stats" in
         Error (e, what, why)
+
+  let freeze handle poolname =
+    match
+      Ioctls.pool_freeze handle poolname
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "failed to freeze pool '%s'" poolname in
+        Error (e, what, why)
 end
