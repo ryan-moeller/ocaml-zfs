@@ -347,4 +347,16 @@ module Zpool = struct
     | Error (e, why) ->
         let what = "failed to read pool configuration" in
         Error (e, what, why)
+
+  let stats handle poolname =
+    match Ioctls.pool_stats handle poolname with
+    | Ok packed_config ->
+        (* (config, available) *)
+        Ok (Nvlist.unpack packed_config, true)
+    | Error (Some packed_config, _errno) ->
+        Ok (Nvlist.unpack packed_config, false)
+    | Error (None, errno) ->
+        let e, why = zpool_standard_error errno in
+        let what = "failed to read pool stats" in
+        Error (e, what, why)
 end
