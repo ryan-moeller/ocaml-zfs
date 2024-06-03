@@ -380,4 +380,14 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "failed to freeze pool '%s'" poolname in
         Error (e, what, why)
+
+  let upgrade handle poolname version =
+    match
+      Ioctls.pool_upgrade handle poolname version
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot upgrade '%s'" poolname in
+        Error (e, what, why)
 end
