@@ -191,6 +191,17 @@ module Zpool = struct
         let what = Printf.sprintf "cannot export '%s'" poolname in
         Error (e, what, why)
 
+  let tryimport handle config =
+    match
+      let packed_config = Nvlist.(pack config Native) in
+      Ioctls.pool_tryimport handle packed_config
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok packed_config -> Ok (Nvlist.unpack packed_config)
+    | Error (e, why) ->
+        let what = "cannot refresh config" in
+        Error (e, what, why)
+
   let import handle config newnameopt propsopt flags =
     let ( let* ) = Result.bind in
     let origname = Option.get @@ Nvlist.lookup_string config "name" in
