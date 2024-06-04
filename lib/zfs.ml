@@ -506,4 +506,14 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "cannot get history for '%s'" poolname in
         Error (e, what, why)
+
+  let reguid handle poolname =
+    match
+      Ioctls.pool_reguid handle poolname
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot reguid '%s'" poolname in
+        Error (e, what, why)
 end
