@@ -404,10 +404,12 @@ module Zpool = struct
           if recstart >= buflen then (List.rev records, offset)
           else
             let reclen = Bytes.get_int64_le buf offset |> Int64.to_int in
-            let packed_record = Bytes.sub buf recstart reclen in
-            let record = Nvlist.unpack packed_record in
-            let next_offset = recstart + reclen in
-            unpack_record next_offset (record :: records)
+            if recstart + reclen > buflen then (List.rev records, offset)
+            else
+              let packed_record = Bytes.sub buf recstart reclen in
+              let record = Nvlist.unpack packed_record in
+              let next_offset = recstart + reclen in
+              unpack_record next_offset (record :: records)
         in
         let records, cookie = unpack_record 0 [] in
         Ok (Some (records, cookie))
