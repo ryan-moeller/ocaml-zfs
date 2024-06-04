@@ -11,24 +11,10 @@
 #include <caml/unixsupport.h>
 
 CAMLprim value
-caml_zfs_util_int_of_descr(value descr)
+caml_zfs_util_int_of_t(value v)
 {
-	CAMLparam1 (descr);
-	CAMLreturn (descr);
-}
-
-CAMLprim value
-caml_zfs_util_int_of_pool_scan_func(value func)
-{
-	CAMLparam1 (func);
-	CAMLreturn (func);
-}
-
-CAMLprim value
-caml_zfs_util_int_of_pool_scrub_cmd(value cmd)
-{
-	CAMLparam1 (cmd);
-	CAMLreturn (cmd);
+	CAMLparam1 (v);
+	CAMLreturn (v);
 }
 
 CAMLprim value
