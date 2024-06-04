@@ -8,6 +8,33 @@ external int_of_pool_scan_func : pool_scan_func -> int
 external int_of_pool_scrub_cmd : pool_scrub_cmd -> int
   = "caml_zfs_util_int_of_pool_scrub_cmd"
 
+let pool_scan_stat_of_array array =
+  assert (Array.length array = 22);
+  {
+    func = array.(0);
+    state = array.(1);
+    start_time = array.(2);
+    end_time = array.(3);
+    to_examine = array.(4);
+    examined = array.(5);
+    skipped = array.(6);
+    processed = array.(7);
+    errors = array.(8);
+    pass_exam = array.(9);
+    pass_start = array.(10);
+    pass_scrub_pause = array.(11);
+    pass_scrub_spent_paused = array.(12);
+    pass_issued = array.(13);
+    issued = array.(14);
+    error_scrub_func = array.(15);
+    error_scrub_state = array.(16);
+    error_scrub_start = array.(17);
+    error_scrub_end = array.(18);
+    error_scrub_examined = array.(19);
+    error_scrub_to_be_examined = array.(20);
+    pass_error_scrub_pause = array.(21);
+  }
+
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
 external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
 

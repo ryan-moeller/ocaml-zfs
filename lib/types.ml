@@ -12,6 +12,31 @@ type import_flags =
 type pool_scan_func = ScanNone | ScanScrub | ScanResilver | ScanErrorScrub
 type pool_scrub_cmd = ScrubNormal | ScrubPause
 
+type pool_scan_stat = {
+  func : int64;
+  state : int64;
+  start_time : int64;
+  end_time : int64;
+  to_examine : int64;
+  examined : int64;
+  skipped : int64;
+  processed : int64;
+  errors : int64;
+  pass_exam : int64;
+  pass_start : int64;
+  pass_scrub_pause : int64;
+  pass_scrub_spent_paused : int64;
+  pass_issued : int64;
+  issued : int64;
+  error_scrub_func : int64;
+  error_scrub_state : int64;
+  error_scrub_start : int64;
+  error_scrub_end : int64;
+  error_scrub_examined : int64;
+  error_scrub_to_be_examined : int64;
+  pass_error_scrub_pause : int64;
+}
+
 type vdev_state =
   | VdevStateUnknown
   | VdevStateClosed
