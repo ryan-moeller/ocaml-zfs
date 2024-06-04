@@ -37,6 +37,8 @@ type pool_scan_stat = {
   pass_error_scrub_pause : int64;
 }
 
+type dsl_scan_state = None | Scanning | Finished | Canceled | ErrorScrubbing
+
 type vdev_state =
   | VdevStateUnknown
   | VdevStateClosed

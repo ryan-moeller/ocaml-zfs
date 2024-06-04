@@ -35,6 +35,9 @@ let pool_scan_stat_of_array array =
     pass_error_scrub_pause = array.(21);
   }
 
+external int_of_dsl_scan_state : dsl_scan_state -> int
+  = "caml_zfs_util_int_of_t"
+
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
 external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
 
