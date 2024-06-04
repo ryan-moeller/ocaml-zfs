@@ -272,10 +272,8 @@ module Zpool = struct
                                writing to the pool.\n\
                                The pool can be imported read only." )
                       else Error (EzfsBadVersion, why)
-                  | None ->
-                      Error (EzfsBadVersion, Error.(to_string EzfsBadVersion)))
-              | None -> Error (EzfsBadVersion, Error.(to_string EzfsBadVersion))
-              )
+                  | None -> Error (EzfsBadVersion, to_string EzfsBadVersion))
+              | None -> Error (EzfsBadVersion, to_string EzfsBadVersion))
           | Unix.EUNKNOWNERR 71 (* EREMOTE (EREMOTEIO) *) -> (
               match Nvlist.lookup_nvlist errors "load_info" with
               | Some info ->
@@ -306,10 +304,8 @@ module Zpool = struct
                     | _ -> "unknown mmp_state"
                   in
                   Error (EzfsActivePool, why)
-              | None -> Error (EzfsActivePool, Error.(to_string EzfsActivePool))
-              )
-          | Unix.EINVAL ->
-              Error (EzfsInvalConfig, Error.(to_string EzfsInvalConfig))
+              | None -> Error (EzfsActivePool, to_string EzfsActivePool))
+          | Unix.EINVAL -> Error (EzfsInvalConfig, to_string EzfsInvalConfig)
           | Unix.EROFS -> Error (EzfsBadDev, "one or more devices is read only")
           | Unix.ENXIO -> (
               match Nvlist.lookup_nvlist errors "load_info" with
