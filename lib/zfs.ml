@@ -367,6 +367,100 @@ module Zpool = struct
         let what = "failed to read pool stats" in
         Error (e, what, why)
 
+  let scan handle poolname scan_func scrub_cmd =
+    let open Types in
+    match
+      match
+        match
+          let args = Nvlist.alloc () in
+          let func = Util.int_of_pool_scan_func scan_func in
+          Nvlist.add_uint64 args "scan_type" (Int64.of_int func);
+          let cmd = Util.int_of_pool_scrub_cmd scrub_cmd in
+          Nvlist.add_uint64 args "scan_command" (Int64.of_int cmd);
+          let packed_args = Nvlist.(pack args Native) in
+          Ioctls.pool_scrub handle poolname packed_args
+        with
+        | Ok () -> Ok ()
+        | Error (Unix.EUNKNOWNERR errno)
+          when errno = zfs_errno_to_int ZfsErrIocCmdUnavail ->
+            Ioctls.pool_scan handle poolname scan_func scrub_cmd
+        | Error errno -> Error errno
+      with
+      | Ok () -> Ok ()
+      | Error (Unix.EUNKNOWNERR 85 (* ECANCELED *))
+        when (scan_func = ScanScrub || scan_func = ScanErrorScrub)
+             && scrub_cmd = ScrubNormal ->
+          Ok ()
+      | Error Unix.ENOENT when scan_func != ScanNone && scrub_cmd = ScrubPause
+        ->
+          Ok ()
+      | Error Unix.EBUSY -> (
+          match stats handle poolname with
+          | Ok (config, _available) -> (
+              let nvroot =
+                Option.get @@ Nvlist.lookup_nvlist config "vdev_tree"
+              in
+              match Nvlist.lookup_uint64_array nvroot "scan_stats" with
+              | Some array ->
+                  let pss = Util.pool_scan_stat_of_array array in
+                  if
+                    pss.func
+                    = Int64.of_int (Util.int_of_pool_scan_func ScanScrub)
+                    && pss.state
+                       = Int64.of_int (Util.int_of_dsl_scan_state Scanning)
+                  then
+                    if pss.pass_scrub_pause = 0L then (
+                      assert (scrub_cmd = ScrubNormal);
+                      Error (EzfsScrubbing, to_string EzfsScrubbing))
+                    else if scan_func = ScanErrorScrub then (
+                      assert (scrub_cmd = ScrubNormal);
+                      Error
+                        ( EzfsScrubPausedToCancel,
+                          to_string EzfsScrubPausedToCancel ))
+                    else (
+                      assert (scan_func = ScanScrub);
+                      assert (scrub_cmd = ScrubPause);
+                      Error (EzfsScrubPaused, to_string EzfsScrubPaused))
+                  else if
+                    pss.error_scrub_func
+                    = Int64.of_int (Util.int_of_pool_scan_func ScanErrorScrub)
+                    && pss.error_scrub_state
+                       = Int64.of_int
+                           (Util.int_of_dsl_scan_state ErrorScrubbing)
+                  then
+                    if pss.pass_error_scrub_pause = 0L then (
+                      assert (scrub_cmd = ScrubNormal);
+                      Error (EzfsErrorScrubbing, to_string EzfsErrorScrubbing))
+                    else (
+                      assert (scan_func = ScanErrorScrub);
+                      assert (scrub_cmd = ScrubPause);
+                      Error
+                        (EzfsErrorScrubPaused, to_string EzfsErrorScrubPaused))
+                  else Error (EzfsResilvering, to_string EzfsResilvering)
+              | None -> Error (EzfsResilvering, to_string EzfsResilvering))
+          | Error _ -> Error (EzfsResilvering, to_string EzfsResilvering))
+      | Error Unix.ENOENT -> Error (EzfsNoScrub, to_string EzfsNoScrub)
+      | Error Unix.EOPNOTSUPP when scan_func = ScanResilver ->
+          Error (EzfsNoResilverDefer, to_string EzfsNoResilverDefer)
+      | Error errno -> Error (zpool_standard_error errno)
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what =
+          match scan_func with
+          | ScanScrub | ScanErrorScrub ->
+              if scrub_cmd = ScrubPause then
+                Printf.sprintf "cannot pause scrubbing %s" poolname
+              else (
+                assert (scrub_cmd = ScrubNormal);
+                Printf.sprintf "cannot scrub %s" poolname)
+          | ScanResilver ->
+              assert (scrub_cmd = ScrubNormal);
+              Printf.sprintf "cannot restart resilver on %s" poolname
+          | ScanNone -> Printf.sprintf "cannot cancel scrubbing %s" poolname
+        in
+        Error (e, what, why)
+
   let freeze handle poolname =
     match
       Ioctls.pool_freeze handle poolname
