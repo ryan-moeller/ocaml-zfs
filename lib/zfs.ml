@@ -516,4 +516,17 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "cannot reguid '%s'" poolname in
         Error (e, what, why)
+
+  let reopen handle poolname scrub_restart =
+    match
+      let args = Nvlist.alloc () in
+      Nvlist.add_boolean_value args "scrub_restart" scrub_restart;
+      let packed_args = Nvlist.(pack args Native) in
+      Ioctls.pool_reopen handle poolname (Some packed_args)
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot reopen '%s'" poolname in
+        Error (e, what, why)
 end
