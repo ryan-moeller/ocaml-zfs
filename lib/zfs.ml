@@ -529,4 +529,17 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "cannot reopen '%s'" poolname in
         Error (e, what, why)
+
+  let sync handle poolname force =
+    match
+      let args = Nvlist.alloc () in
+      Nvlist.add_boolean_value args "force" force;
+      let packed_args = Nvlist.(pack args Native) in
+      Ioctls.pool_sync handle poolname packed_args
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "sync '%s' failed" poolname in
+        Error (e, what, why)
 end
