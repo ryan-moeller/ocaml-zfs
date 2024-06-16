@@ -579,4 +579,12 @@ module Zpool = struct
     | Error (e, why) ->
         let what = "failed to add handler" in
         Error (e, what, why)
+
+  let clear_fault handle id =
+    match Ioctls.clear_fault handle id with
+    | Ok () -> Ok ()
+    | Error errno ->
+        let what = Printf.sprintf "failed to remove handler %Lu" id in
+        let why = Unix.error_message errno in
+        Error (EzfsUnknown, what, why)
 end
