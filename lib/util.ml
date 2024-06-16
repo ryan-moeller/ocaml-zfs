@@ -38,6 +38,21 @@ let pool_scan_stat_of_array array =
 external int_of_dsl_scan_state : dsl_scan_state -> int
   = "caml_zfs_util_int_of_t"
 
+external int_of_zinject_type : zinject_type -> int = "caml_zfs_util_int_of_t"
+
+let zinject_type_of_int = function
+  | i when i = int_of_zinject_type ZinjectUninitialized -> ZinjectUninitialized
+  | i when i = int_of_zinject_type ZinjectDataFault -> ZinjectDataFault
+  | i when i = int_of_zinject_type ZinjectDeviceFault -> ZinjectDeviceFault
+  | i when i = int_of_zinject_type ZinjectLabelFault -> ZinjectLabelFault
+  | i when i = int_of_zinject_type ZinjectIgnoredWrites -> ZinjectIgnoredWrites
+  | i when i = int_of_zinject_type ZinjectPanic -> ZinjectPanic
+  | i when i = int_of_zinject_type ZinjectDelayIo -> ZinjectDelayIo
+  | i when i = int_of_zinject_type ZinjectDecryptFault -> ZinjectDecryptFault
+  | i when i = int_of_zinject_type ZinjectDelayImport -> ZinjectDelayImport
+  | i when i = int_of_zinject_type ZinjectDelayExport -> ZinjectDelayExport
+  | _ -> failwith "unknown zinject_type"
+
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
 external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
 

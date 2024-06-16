@@ -542,4 +542,41 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "sync '%s' failed" poolname in
         Error (e, what, why)
+
+  let inject_fault handle poolname record flags =
+    match
+      match
+        let iflags =
+          Array.fold_right
+            (fun flag -> Types.int_of_zinject_flag flag |> Int.logor)
+            flags 0
+        in
+        Ioctls.inject_fault handle poolname record iflags
+      with
+      | Ok id -> Ok id
+      | Error Unix.EDOM ->
+          Error (EzfsPoolInvalArg, "block level exceeds max level of object")
+      | Error Unix.EEXIST ->
+          let why =
+            match Util.zinject_type_of_int (Int32.to_int record.cmd) with
+            | ZinjectDelayImport -> "pool already imported"
+            | ZinjectDelayExport -> "a handler already exists"
+            | _ -> Unix.error_message Unix.EEXIST
+          in
+          Error (EzfsExists, why)
+      | Error Unix.ENOENT -> (
+          match Util.zinject_type_of_int (Int32.to_int record.cmd) with
+          | ZinjectDelayImport ->
+              Error (EzfsIocNotSupported, "import delay injector not supported")
+          | _ ->
+              let why = Unix.error_message Unix.ENOENT in
+              Error (EzfsNoEnt, why))
+      | Error errno ->
+          let why = Unix.error_message errno in
+          Error (EzfsUnknown, why)
+    with
+    | Ok id -> Ok id
+    | Error (e, why) ->
+        let what = "failed to add handler" in
+        Error (e, what, why)
 end

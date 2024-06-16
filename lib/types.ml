@@ -78,6 +78,18 @@ type lzc_send_flag =
   | LzcSendFlagRaw
   | LzcSendFlagSaved
 
+type zinject_type =
+  | ZinjectUninitialized
+  | ZinjectDataFault
+  | ZinjectDeviceFault
+  | ZinjectLabelFault
+  | ZinjectIgnoredWrites
+  | ZinjectPanic
+  | ZinjectDelayIo
+  | ZinjectDecryptFault
+  | ZinjectDelayImport
+  | ZinjectDelayExport
+
 type zinject_record = {
   objset : int64;
   obj : int64;
@@ -97,6 +109,18 @@ type zinject_record = {
   cmd : int32;
   dvas : int32;
 }
+
+type zinject_flag =
+  | ZinjectNull
+  | ZinjectFlushArc
+  | ZinjectUnloadSpa
+  | ZinjectCalcRange
+
+let int_of_zinject_flag = function
+  | ZinjectNull -> 0x1
+  | ZinjectFlushArc -> 0x2
+  | ZinjectUnloadSpa -> 0x4
+  | ZinjectCalcRange -> 0x8
 
 type zbookmark_phys = {
   objset : int64;
