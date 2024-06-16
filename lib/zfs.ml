@@ -587,4 +587,12 @@ module Zpool = struct
         let what = Printf.sprintf "failed to remove handler %Lu" id in
         let why = Unix.error_message errno in
         Error (EzfsUnknown, what, why)
+
+  let inject_list_next handle id =
+    match Ioctls.inject_list_next handle id with
+    | Ok next -> Ok next
+    | Error errno ->
+        let what = "unable to list handlers" in
+        let why = Unix.error_message errno in
+        Error (EzfsUnknown, what, why)
 end
