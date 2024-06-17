@@ -606,4 +606,40 @@ module Zpool = struct
           Printf.sprintf "list of errors unavailable for pool '%s'" poolname
         in
         Error (e, what, why)
+
+  let clear handle poolname =
+    match
+      Ioctls.clear handle poolname None None
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok (Some _) -> failwith "unexpected nvlist from ioctl"
+    | Ok None -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot clear errors for '%s'" poolname in
+        Error (e, what, why)
+
+  let clear_rewind handle poolname rewind =
+    match
+      let packed_rewind = Nvlist.(pack rewind Native) in
+      Ioctls.clear handle poolname None (Some packed_rewind)
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok None -> failwith "expected nvlist from ioctl"
+    | Ok (Some packed_config) ->
+        let config = Nvlist.unpack packed_config in
+        Ok config
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot clear errors for '%s'" poolname in
+        Error (e, what, why)
+
+  let clear_vdev handle poolname guid =
+    match
+      Ioctls.clear handle poolname (Some guid) None
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok (Some _) -> failwith "unexpected nvlist from ioctl"
+    | Ok None -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot clear errors for %Lx" guid in
+        Error (e, what, why)
 end
