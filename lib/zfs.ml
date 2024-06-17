@@ -595,4 +595,15 @@ module Zpool = struct
         let what = "unable to list handlers" in
         let why = Unix.error_message errno in
         Error (EzfsUnknown, what, why)
+
+  let error_log handle poolname =
+    match
+      Ioctls.error_log handle poolname |> Result.map_error zpool_standard_error
+    with
+    | Ok errors -> Ok errors
+    | Error (e, why) ->
+        let what =
+          Printf.sprintf "list of errors unavailable for pool '%s'" poolname
+        in
+        Error (e, what, why)
 end
