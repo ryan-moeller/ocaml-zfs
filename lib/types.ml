@@ -138,3 +138,9 @@ type zpool_load_policy = {
   maxdata : int64;
   txg : int64;
 }
+
+type pool_initialize_func =
+  | PoolInitializeStart
+  | PoolInitializeCancel
+  | PoolInitializeSuspend
+  | PoolInitializeUninit

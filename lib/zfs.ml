@@ -642,4 +642,47 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "cannot clear errors for %Lx" guid in
         Error (e, what, why)
+
+  let initialize handle poolname func vdevs =
+    match
+      match
+        let args = Nvlist.alloc () in
+        let ifunc = Util.int_of_pool_initialize_func func in
+        Nvlist.add_uint64 args "initialize_command" (Int64.of_int ifunc);
+        Nvlist.add_nvlist args "initialize_vdevs" vdevs;
+        let packed_args = Nvlist.(pack args Native) in
+        Ioctls.pool_initialize handle poolname packed_args
+      with
+      | Ok () -> Ok ()
+      | Error (Some packed_errors, errno) ->
+          let errors = Nvlist.unpack packed_errors in
+          let vdev_errors =
+            let vdev_errors_nvl =
+              Option.get @@ Nvlist.lookup_nvlist errors "initialize_vdevs"
+            in
+            let rec iter_pairs prev list =
+              match Nvlist.next_nvpair vdev_errors_nvl prev with
+              | None -> List.rev list
+              | Some pair ->
+                  let guid = Int64.of_string @@ Nvpair.name pair in
+                  let error = Nvpair.value_uint64 pair in
+                  let new_list = (guid, error) :: list in
+                  iter_pairs (Some pair) new_list
+            in
+            iter_pairs None []
+          in
+          let e, why = zpool_standard_error errno in
+          Error (e, vdev_errors, why)
+      | Error (None, Unix.EINVAL) when func = PoolInitializeUninit ->
+          (* XXX: libzfs quirk for compat with older modules *)
+          let why = "uninitialize is not supported by kernel" in
+          Error (EzfsIocNotSupported, [], why)
+      | Error (None, errno) ->
+          let e, why = zpool_standard_error errno in
+          Error (e, [], why)
+    with
+    | Ok () -> Ok ()
+    | Error (e, vdev_errors, why) ->
+        let what = "operation failed" in
+        Error (e, vdev_errors, what, why)
 end

@@ -53,6 +53,9 @@ let zinject_type_of_int = function
   | i when i = int_of_zinject_type ZinjectDelayExport -> ZinjectDelayExport
   | _ -> failwith "unknown zinject_type"
 
+external int_of_pool_initialize_func : pool_initialize_func -> int
+  = "caml_zfs_util_int_of_t"
+
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
 external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
 
