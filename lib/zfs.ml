@@ -755,4 +755,29 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "cannot add to '%s'" poolname in
         Error (e, what, why)
+
+  let remove handle poolname guid =
+    match
+      (* TODO: check if draid spare or log device *)
+      match Ioctls.vdev_remove handle poolname guid with
+      | Ok () -> Ok ()
+      | Error Unix.EALREADY ->
+          Error (EzfsBusy, "removal for this vdev is already in progress")
+      | Error Unix.EINVAL ->
+          Error
+            ( EzfsInvalConfig,
+              "invalid config; all top-level vdevs must have the same sector \
+               size and not be raidz" )
+      | Error Unix.EBUSY ->
+          (* TODO: check if log device *)
+          Error (EzfsBusy, "pool busy; removal may already be in progress")
+      | Error Unix.EACCES ->
+          (* TODO: check if log device *)
+          Error (zpool_standard_error Unix.EACCES)
+      | Error errno -> Error (zpool_standard_error errno)
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot remove %Lu" guid in
+        Error (e, what, why)
 end
