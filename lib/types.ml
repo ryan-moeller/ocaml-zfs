@@ -144,3 +144,5 @@ type pool_initialize_func =
   | PoolInitializeCancel
   | PoolInitializeSuspend
   | PoolInitializeUninit
+
+type pool_trim_func = PoolTrimStart | PoolTrimCancel | PoolTrimSuspend

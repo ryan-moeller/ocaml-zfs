@@ -56,6 +56,9 @@ let zinject_type_of_int = function
 external int_of_pool_initialize_func : pool_initialize_func -> int
   = "caml_zfs_util_int_of_t"
 
+external int_of_pool_trim_func : pool_trim_func -> int
+  = "caml_zfs_util_int_of_t"
+
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
 external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
 
