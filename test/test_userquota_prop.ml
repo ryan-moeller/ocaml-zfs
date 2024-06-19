@@ -1,4 +1,4 @@
-open Zfs
+open Lib
 
 let () =
   assert (

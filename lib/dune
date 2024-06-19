@@ -1,5 +1,5 @@
 (library
- (name zfs)
+ (name lib)
  (public_name zfs)
  (libraries nvpair str unix)
  (foreign_stubs

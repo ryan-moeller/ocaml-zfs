@@ -1,5 +1,5 @@
 open Nvpair
-open Zfs
+open Lib
 
 let () =
   let handle = Ioctls.open_handle () in
