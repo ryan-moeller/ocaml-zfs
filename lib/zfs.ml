@@ -726,4 +726,33 @@ module Zpool = struct
     | Error (e, vdev_errors, why) ->
         let what = "operation failed" in
         Error (e, vdev_errors, what, why)
+
+  let add handle poolname config check_ashift =
+    match
+      match
+        let packed_config = Nvlist.(pack config Native) in
+        Ioctls.vdev_add handle poolname packed_config check_ashift
+      with
+      | Ok () -> Ok ()
+      | Error Unix.EBUSY ->
+          Error (EzfsBadDev, "one or more vdevs refer to the same device")
+      | Error Unix.EINVAL ->
+          (* XXX: libzfs has a different error message for draid *)
+          Error
+            ( EzfsBadDev,
+              "invalid config; a pool with removing/removed vdevs does not \
+               support adding raidz or dRAID vdevs" )
+      | Error Unix.EOVERFLOW ->
+          Error
+            ( EzfsBadDev,
+              Printf.sprintf "device is less than the minimum size (%s)"
+                (Util.nicebytes Const.spa_mindevsize) )
+      | Error Unix.EOPNOTSUPP ->
+          Error (EzfsBadVersion, "pool must be upgraded to add these vdevs")
+      | Error errno -> Error (zpool_standard_error errno)
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = Printf.sprintf "cannot add to '%s'" poolname in
+        Error (e, what, why)
 end
