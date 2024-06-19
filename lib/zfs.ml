@@ -780,4 +780,14 @@ module Zpool = struct
     | Error (e, why) ->
         let what = Printf.sprintf "cannot remove %Lu" guid in
         Error (e, what, why)
+
+  let remove_cancel handle poolname =
+    match
+      Ioctls.vdev_remove_cancel handle poolname
+      |> Result.map_error zpool_standard_error
+    with
+    | Ok () -> Ok ()
+    | Error (e, why) ->
+        let what = "cannot cancel removal" in
+        Error (e, what, why)
 end
