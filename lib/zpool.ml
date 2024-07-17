@@ -798,3 +798,18 @@ let attach handle poolname guid config replacing rebuild =
   | Error (e, why) ->
       let what = if replacing then "cannot replace" else "cannot attach" in
       Error (e, what, why)
+
+let detach handle poolname guid =
+  match
+    match Ioctls.vdev_detach handle poolname guid with
+    | Ok () -> Ok ()
+    | Error Unix.EOPNOTSUPP ->
+        Error (EzfsBadTarget, "only applicable to mirror and replacing vdevs")
+    | Error Unix.EBUSY ->
+        Error (EzfsNoReplicas, "there are no other replicas of this device")
+    | Error errno -> Error (zpool_standard_error errno)
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = "cannot detach" in
+      Error (e, what, why)
