@@ -70,3 +70,34 @@ let dataset_list_next handle name cookie =
   | Error (e, why) ->
       let what = "failed to list next dataset" in
       Error (e, what, why)
+
+let snapshot_list_next_simple handle name cookie =
+  match
+    let simple = true in
+    Ioctls.snapshot_list_next handle name simple cookie
+    |> Result.map_error zfs_standard_error
+  with
+  | Ok None -> Ok None
+  | Ok (Some (next_name, stats, None, next_cookie)) ->
+      Ok (Some (next_name, stats, next_cookie))
+  | Ok (Some (_, _, Some _, _)) ->
+      failwith "snapshot_list_next returned unexpected bytes"
+  | Error (e, why) ->
+      let what = "failed to list next snapshot" in
+      Error (e, what, why)
+
+let snapshot_list_next handle name cookie =
+  match
+    let simple = false in
+    Ioctls.snapshot_list_next handle name simple cookie
+    |> Result.map_error zfs_standard_error
+  with
+  | Ok None -> Ok None
+  | Ok (Some (next_name, stats, Some packed_props, next_cookie)) ->
+      let props = Nvlist.unpack packed_props in
+      Ok (Some (next_name, stats, props, next_cookie))
+  | Ok (Some (_, _, None, _)) ->
+      failwith "snapshot_list_next failed to return props"
+  | Error (e, why) ->
+      let what = "failed to list next snapshot" in
+      Error (e, what, why)
