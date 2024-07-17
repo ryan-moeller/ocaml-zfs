@@ -40,7 +40,7 @@ let zplprops handle name =
       in
       Error (e, what, why)
 
-let list_next_simple handle name cookie =
+let dataset_list_next_simple handle name cookie =
   match
     let simple = true in
     Ioctls.dataset_list_next handle name simple cookie
@@ -55,7 +55,7 @@ let list_next_simple handle name cookie =
       let what = "failed to list next dataset" in
       Error (e, what, why)
 
-let list_next handle name cookie =
+let dataset_list_next handle name cookie =
   match
     let simple = false in
     Ioctls.dataset_list_next handle name simple cookie
