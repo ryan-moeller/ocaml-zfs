@@ -813,3 +813,23 @@ let detach handle poolname guid =
   | Error (e, why) ->
       let what = "cannot detach" in
       Error (e, what, why)
+
+let setpath handle poolname guid path =
+  match
+    Ioctls.vdev_setpath handle poolname guid path
+    |> Result.map_error zpool_standard_error
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = "cannot set path" in
+      Error (e, what, why)
+
+let setfru handle poolname guid fru =
+  match
+    Ioctls.vdev_setfru handle poolname guid fru
+    |> Result.map_error zpool_standard_error
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = "cannot set fru" in
+      Error (e, what, why)
