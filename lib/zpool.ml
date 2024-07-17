@@ -760,3 +760,41 @@ let remove_cancel handle poolname =
   | Error (e, why) ->
       let what = "cannot cancel removal" in
       Error (e, what, why)
+
+let attach handle poolname guid config replacing rebuild =
+  match
+    (* TODO: check if log/cache/etc *)
+    match
+      let packed_config = Nvlist.(pack config Native) in
+      Ioctls.vdev_attach handle poolname guid packed_config replacing rebuild
+    with
+    | Ok () -> Ok ()
+    | Error Unix.EOPNOTSUPP ->
+        (* TODO: check version, draid spare, type *)
+        let why =
+          if replacing then "cannot replace this type of vdev"
+          else "can only attach to mirrors and top-level disks"
+        in
+        Error (EzfsBadTarget, why)
+    | Error Unix.EINVAL ->
+        Error (EzfsInvalConfig, "new device must be a single disk")
+    | Error Unix.EBUSY -> Error (EzfsBadDev, "new device is busy")
+    | Error Unix.EOVERFLOW -> Error (EzfsBadDev, "device is too small")
+    | Error Unix.EDOM ->
+        Error (EzfsBadDev, "new device has a different optimal sector size")
+    | Error Unix.ENAMETOOLONG ->
+        Error
+          ( EzfsDevOverflow,
+            "resulting top-level vdev spec won't fit in the label" )
+    | Error Unix.ENXIO ->
+        (* TODO: type check *)
+        Error (zpool_standard_error Unix.ENXIO)
+    | Error Unix.EADDRINUSE ->
+        (* TODO: type check *)
+        Error (zpool_standard_error Unix.EADDRINUSE)
+    | Error errno -> Error (zpool_standard_error errno)
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = if replacing then "cannot replace" else "cannot attach" in
+      Error (e, what, why)
