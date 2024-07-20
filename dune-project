@@ -17,10 +17,10 @@
 
 (package
  (name zfs)
- (synopsis "Bindings for OpenZFS libzfs(3) ZFS library")
+ (synopsis "Bindings for OpenZFS ioctls")
  (description "Functions for managing ZFS")
  (depends ocaml dune str nvpair unix)
  (tags
-  (topics OpenZFS ZFS libzfs)))
+  (topics OpenZFS ZFS)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
