@@ -101,3 +101,41 @@ let snapshot_list_next handle name cookie =
   | Error (e, why) ->
       let what = "failed to list next snapshot" in
       Error (e, what, why)
+
+let set handle name props dataset_type zoned =
+  let ( let* ) = Result.bind in
+  match
+    let create = false in
+    let keyok = false in
+    let* props = Zfs_prop.validate props dataset_type zoned create keyok in
+    (* XXX: libzfs automates reservation if volsize is being set *)
+    match
+      let packed_props = Nvlist.(pack props Native) in
+      Ioctls.set_prop handle name packed_props
+    with
+    | Ok () -> Ok ()
+    | Error (None, errno) -> Error (zfs_standard_error errno)
+    | Error (Some packed_errors, _errno) ->
+        let errors = Nvlist.unpack packed_errors in
+        let rec format_description prev e list =
+          match Nvlist.next_nvpair errors prev with
+          | Some pair ->
+              let propname = Nvpair.name pair in
+              let prop = Zfs_prop.of_string propname in
+              (*
+               * XXX: libzfs ignores the individual errors and uses
+               * errno from the ioctl for all props instead.
+               *)
+              let errno = Nvpair.value_int32 pair |> Int32.to_int in
+              let error = Util.error_of_int errno in
+              let e, why = Zfs_prop.zfs_setprop_error prop error in
+              let msg = Printf.sprintf "%s: %s" propname why in
+              format_description (Some pair) e (msg :: list)
+          | None -> (e, String.concat "\n" (List.rev list))
+        in
+        Error (format_description None EzfsBadProp [])
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = Printf.sprintf "failed to set props for '%s'" name in
+      Error (e, what, why)

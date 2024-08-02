@@ -61,6 +61,7 @@ external int_of_pool_trim_func : pool_trim_func -> int
 
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
 external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
+external error_of_int : int -> Unix.error = "caml_zfs_util_error_of_int"
 
 let nicestrtonum s =
   let shiftamt suffix =

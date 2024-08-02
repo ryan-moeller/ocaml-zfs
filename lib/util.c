@@ -51,3 +51,12 @@ caml_zfs_util_getzoneid(value unit)
 	}
 	CAMLreturn (Val_int(jid));
 }
+
+CAMLprim value
+caml_zfs_util_error_of_int(value errn)
+{
+	CAMLparam1 (errn);
+	int code = Int_val(errn);
+
+	CAMLreturn (caml_unix_error_of_code(code));
+}
