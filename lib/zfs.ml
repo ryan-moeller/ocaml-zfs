@@ -139,3 +139,59 @@ let set handle name props dataset_type zoned =
   | Error (e, why) ->
       let what = Printf.sprintf "failed to set props for '%s'" name in
       Error (e, what, why)
+
+let create handle name propsopt dataset_type zoned =
+  let ( let* ) = Result.bind in
+  match
+    let* () =
+      Zfs_prop.validate_name name [| dataset_type |] true
+      |> Result.map_error (fun why -> (EzfsInvalidName, why))
+    in
+    (* TODO: validate depth *)
+    let args = Nvlist.alloc () in
+    let* ost =
+      match dataset_type with
+      | Filesystem -> Ok Types.ObjsetTypeZfs
+      | Volume -> Ok Types.ObjsetTypeZvol
+      | _ -> Error (EzfsBadType, to_string EzfsBadType)
+    in
+    let ost = Util.int_of_objset_type ost in
+    Nvlist.add_int32 args "type" @@ Int32.of_int ost;
+    let* () =
+      if Option.is_some propsopt then
+        let props = Option.get propsopt in
+        let create = true in
+        let keyok = true in
+        match Zfs_prop.validate props dataset_type zoned create keyok with
+        | Ok props ->
+            (* TODO: crypto create *)
+            if Zfs_prop.has_encryption_props props then
+              Error (EzfsBadProp, "encryption is TODO")
+            else (
+              Nvlist.add_nvlist args "props" props;
+              Ok ())
+        | Error e -> Error e
+      else Ok ()
+    in
+    match
+      let packed_args = Nvlist.(pack args Native) in
+      Ioctls.create handle name packed_args
+    with
+    | Ok () -> Ok ()
+    | Error Unix.ENOENT ->
+        (* TODO: check parent exists, add name to error message *)
+        Error (EzfsNoEnt, "no such parent")
+    | Error Unix.EOPNOTSUPP ->
+        Error
+          (EzfsBadVersion, "pool must be upgraded to set this property or value")
+    | Error Unix.EACCES ->
+        Error
+          (EzfsCryptoFailed, "encryption root's key is not loaded or provided")
+    | Error Unix.ERANGE ->
+        Error (EzfsBadProp, "invalid property value(s) specified")
+    | Error errno -> Error (zfs_standard_error errno)
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = Printf.sprintf "cannot create '%s'" name in
+      Error (e, what, why)
