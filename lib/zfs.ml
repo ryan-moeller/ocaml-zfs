@@ -195,3 +195,16 @@ let create handle name propsopt dataset_type zoned =
   | Error (e, why) ->
       let what = Printf.sprintf "cannot create '%s'" name in
       Error (e, what, why)
+
+let destroy handle name =
+  match
+    (* NB: to defer use destroy_snaps *)
+    let defer = false in
+    Ioctls.destroy handle name defer |> Result.map_error zfs_standard_error
+  with
+  | Ok () ->
+      (* XXX: caller must remove mountpoint *)
+      Ok ()
+  | Error (e, why) ->
+      let what = Printf.printf "cannot destroy '%s'" name in
+      Error (e, what, why)
