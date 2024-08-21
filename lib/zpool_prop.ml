@@ -93,7 +93,11 @@ type attributes = {
   index_table : (string * int64) array;
 }
 
-let attributes = function
+let attributes =
+  let empty_index_table = [||] in
+  let boolean_values = Some "on | off" in
+  let boolean_index_table = [| ("off", 0L); ("on", 1L) |] in
+  function
   | Inval -> failwith "not a valid property"
   | Allocated ->
       {
@@ -108,7 +112,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Altroot ->
       {
@@ -123,7 +127,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Ashift ->
       {
@@ -138,7 +142,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Autoexpand ->
       {
@@ -148,12 +152,12 @@ let attributes = function
         strdefault = None;
         readonly = false;
         onetime = false;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "EXPAND";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Autoreplace ->
       {
@@ -163,12 +167,12 @@ let attributes = function
         strdefault = None;
         readonly = false;
         onetime = false;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "REPLACE";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Autotrim ->
       {
@@ -178,12 +182,12 @@ let attributes = function
         strdefault = None;
         readonly = false;
         onetime = false;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "AUTOTRIM";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Bcloneratio ->
       {
@@ -198,7 +202,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bclonesaved ->
       {
@@ -213,7 +217,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bcloneused ->
       {
@@ -228,7 +232,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bootfs ->
       {
@@ -243,7 +247,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Cachefile ->
       {
@@ -258,7 +262,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Capacity ->
       {
@@ -273,7 +277,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Checkpoint ->
       {
@@ -288,7 +292,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Comment ->
       {
@@ -303,7 +307,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Compatibility ->
       {
@@ -318,7 +322,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Dedupditto ->
       {
@@ -333,7 +337,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Dedupratio ->
       {
@@ -348,7 +352,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Delegation ->
       {
@@ -358,12 +362,12 @@ let attributes = function
         strdefault = None;
         readonly = false;
         onetime = false;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "DELEGATION";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Expandsz ->
       {
@@ -378,7 +382,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Failuremode ->
       {
@@ -408,7 +412,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Free ->
       {
@@ -423,7 +427,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Freeing ->
       {
@@ -438,7 +442,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Guid ->
       {
@@ -453,7 +457,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Health ->
       {
@@ -468,7 +472,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Leaked ->
       {
@@ -483,7 +487,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Listsnaps ->
       {
@@ -493,12 +497,12 @@ let attributes = function
         strdefault = None;
         readonly = false;
         onetime = false;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "LISTSNAPS";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Load_guid ->
       {
@@ -513,7 +517,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Maxblocksize ->
       {
@@ -528,7 +532,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Maxdnodesize ->
       {
@@ -543,7 +547,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Multihost ->
       {
@@ -553,12 +557,12 @@ let attributes = function
         strdefault = None;
         readonly = false;
         onetime = false;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "MULTIHOST";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Name ->
       {
@@ -573,7 +577,7 @@ let attributes = function
         rightalign = false;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Readonly ->
       {
@@ -583,12 +587,12 @@ let attributes = function
         strdefault = None;
         readonly = false;
         onetime = false;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "RDONLY";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Size ->
       {
@@ -603,7 +607,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Tname ->
       {
@@ -618,7 +622,7 @@ let attributes = function
         rightalign = false;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Version ->
       {
@@ -633,7 +637,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
 
 let to_string prop = (attributes prop).name

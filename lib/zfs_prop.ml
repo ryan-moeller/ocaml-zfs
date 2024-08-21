@@ -222,7 +222,11 @@ type attributes = {
   index_table : (string * int64) array;
 }
 
-let attributes = function
+let attributes =
+  let empty_index_table = [||] in
+  let boolean_values = Some "on | off" in
+  let boolean_index_table = [| ("off", 0L); ("on", 1L) |] in
+  function
   | Inval | Userprop -> failwith "not a valid property"
   | Aclinherit ->
       {
@@ -312,12 +316,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "ATIME";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Available ->
       {
@@ -335,7 +339,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Canmount ->
       {
@@ -423,7 +427,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Compression ->
       {
@@ -523,7 +527,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Copies ->
       {
@@ -559,7 +563,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Creation ->
       {
@@ -577,7 +581,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Dedup ->
       {
@@ -626,12 +630,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Snapshot |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "DEFER_DESTROY";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Devices ->
       {
@@ -644,12 +648,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem; Snapshot |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "DEVICES";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Dnodesize ->
       {
@@ -725,7 +729,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Exec ->
       {
@@ -738,12 +742,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem; Snapshot |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "EXEC";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Filesystem_count ->
       {
@@ -761,7 +765,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Filesystem_limit ->
       {
@@ -779,7 +783,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Guid ->
       {
@@ -797,7 +801,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Inconsistent ->
       {
@@ -815,7 +819,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Iscsioptions ->
       {
@@ -833,7 +837,7 @@ let attributes = function
         rightalign = false;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Ivset_guid ->
       {
@@ -851,7 +855,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Key_guid ->
       {
@@ -869,7 +873,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Keyformat ->
       {
@@ -906,7 +910,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Keystatus ->
       {
@@ -960,7 +964,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Logicalused ->
       {
@@ -978,7 +982,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Mlslabel ->
       {
@@ -996,7 +1000,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Mounted ->
       {
@@ -1032,7 +1036,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Name ->
       {
@@ -1050,7 +1054,7 @@ let attributes = function
         rightalign = false;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Nbmand ->
       {
@@ -1063,12 +1067,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem; Snapshot |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "NBMAND";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Normalize ->
       {
@@ -1111,7 +1115,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Objsetid ->
       {
@@ -1129,7 +1133,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Origin ->
       {
@@ -1147,7 +1151,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Overlay ->
       {
@@ -1160,12 +1164,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "OVERLAY";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Pbkdf2_iters ->
       {
@@ -1183,7 +1187,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Pbkdf2_salt ->
       {
@@ -1201,7 +1205,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Prefetch ->
       {
@@ -1237,7 +1241,7 @@ let attributes = function
         rightalign = false;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Primarycache ->
       {
@@ -1273,7 +1277,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Readonly ->
       {
@@ -1286,12 +1290,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem; Volume |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "RDONLY";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Receive_resume_token ->
       {
@@ -1309,7 +1313,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Recordsize ->
       {
@@ -1327,7 +1331,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Redact_snaps ->
       {
@@ -1345,7 +1349,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Redacted ->
       {
@@ -1363,7 +1367,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Redundant_metadata ->
       {
@@ -1400,7 +1404,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Refquota ->
       {
@@ -1418,7 +1422,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Refratio ->
       {
@@ -1436,7 +1440,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Refreservation ->
       {
@@ -1454,7 +1458,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Relatime ->
       {
@@ -1467,12 +1471,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "RELATIME";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Remaptxg ->
       {
@@ -1490,7 +1494,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Reservation ->
       {
@@ -1508,7 +1512,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Secondarycache ->
       {
@@ -1544,7 +1548,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Selinux_defcontext ->
       {
@@ -1562,7 +1566,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Selinux_fscontext ->
       {
@@ -1580,7 +1584,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Selinux_rootcontext ->
       {
@@ -1598,7 +1602,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Setuid ->
       {
@@ -1611,12 +1615,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem; Snapshot |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "SETUID";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Sharenfs ->
       {
@@ -1634,7 +1638,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Sharesmb ->
       {
@@ -1652,7 +1656,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Snapdev ->
       {
@@ -1706,7 +1710,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Snapshot_limit ->
       {
@@ -1724,7 +1728,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Snapshots_changed ->
       {
@@ -1742,7 +1746,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Special_small_blocks ->
       {
@@ -1760,7 +1764,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Stmf_shareinfo ->
       {
@@ -1778,7 +1782,7 @@ let attributes = function
         rightalign = false;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Sync ->
       {
@@ -1814,7 +1818,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Unique ->
       {
@@ -1832,7 +1836,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Used ->
       {
@@ -1850,7 +1854,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Usedchild ->
       {
@@ -1868,7 +1872,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Usedds ->
       {
@@ -1886,7 +1890,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Usedrefreserv ->
       {
@@ -1904,7 +1908,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Usedsnap ->
       {
@@ -1922,7 +1926,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Useraccounting ->
       {
@@ -1940,7 +1944,7 @@ let attributes = function
         rightalign = true;
         visible = false;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Userrefs ->
       {
@@ -1958,7 +1962,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Utf8only ->
       {
@@ -1971,12 +1975,12 @@ let attributes = function
         onetime = true;
         onetime_default = false;
         dataset_types = [| Filesystem; Snapshot |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "UTF8ONLY";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Version ->
       {
@@ -2020,7 +2024,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Volmode ->
       {
@@ -2063,7 +2067,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Volthreading ->
       {
@@ -2076,12 +2080,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Volume |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "VOLTHREADING";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Vscan ->
       {
@@ -2094,12 +2098,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "VSCAN";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Written ->
       {
@@ -2117,7 +2121,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Xattr ->
       {
@@ -2148,12 +2152,12 @@ let attributes = function
         onetime = false;
         onetime_default = false;
         dataset_types = [| Filesystem |];
-        values = Some "on | off";
+        values = boolean_values;
         colname = "JAILED";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
 
 let to_string prop = (attributes prop).name

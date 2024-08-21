@@ -118,7 +118,11 @@ type attributes = {
   index_table : (string * int64) array;
 }
 
-let attributes = function
+let attributes =
+  let empty_index_table = [||] in
+  let boolean_values = Some "on | off" in
+  let boolean_index_table = [| ("off", 0L); ("on", 1L) |] in
+  function
   | Inval | Userprop -> failwith "not a valid property"
   | Allocated ->
       {
@@ -131,7 +135,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Allocating ->
       {
@@ -157,7 +161,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Asize ->
       {
@@ -170,7 +174,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bootsize ->
       {
@@ -183,7 +187,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bytes_claim ->
       {
@@ -196,7 +200,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bytes_free ->
       {
@@ -209,7 +213,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bytes_null ->
       {
@@ -222,7 +226,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bytes_read ->
       {
@@ -235,7 +239,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bytes_trim ->
       {
@@ -248,7 +252,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Bytes_write ->
       {
@@ -261,7 +265,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Capacity ->
       {
@@ -274,7 +278,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Checksum_errors ->
       {
@@ -287,7 +291,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Checksum_n ->
       {
@@ -300,7 +304,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Checksum_t ->
       {
@@ -313,7 +317,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Children ->
       {
@@ -326,7 +330,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Comment ->
       {
@@ -339,7 +343,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Devid ->
       {
@@ -352,7 +356,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Enc_path ->
       {
@@ -365,7 +369,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Expandsz ->
       {
@@ -378,7 +382,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Failfast ->
       {
@@ -386,12 +390,12 @@ let attributes = function
         prop_type = Index;
         numdefault = 1L;
         readonly = false;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "FAILFAST";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Fragmentation ->
       {
@@ -404,7 +408,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Free ->
       {
@@ -417,7 +421,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Fru ->
       {
@@ -430,7 +434,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Guid ->
       {
@@ -443,7 +447,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Initialize_errors ->
       {
@@ -456,7 +460,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Io_n ->
       {
@@ -469,7 +473,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Io_t ->
       {
@@ -482,7 +486,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Name ->
       {
@@ -495,7 +499,7 @@ let attributes = function
         rightalign = false;
         visible = false;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Numchildren ->
       {
@@ -508,7 +512,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Ops_claim ->
       {
@@ -521,7 +525,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Ops_free ->
       {
@@ -534,7 +538,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Ops_null ->
       {
@@ -547,7 +551,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Ops_read ->
       {
@@ -560,7 +564,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Ops_trim ->
       {
@@ -573,7 +577,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Ops_write ->
       {
@@ -586,7 +590,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Parent ->
       {
@@ -599,7 +603,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Parity ->
       {
@@ -612,7 +616,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Path ->
       {
@@ -625,7 +629,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Phys_path ->
       {
@@ -638,7 +642,7 @@ let attributes = function
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Psize ->
       {
@@ -651,7 +655,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Raidz_expanding ->
       {
@@ -659,12 +663,12 @@ let attributes = function
         prop_type = Index;
         numdefault = 0L;
         readonly = true;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "RAIDZ_EXPANDING";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Read_errors ->
       {
@@ -677,7 +681,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Removing ->
       {
@@ -685,12 +689,12 @@ let attributes = function
         prop_type = Index;
         numdefault = 0L;
         readonly = true;
-        values = Some "on | off";
+        values = boolean_values;
         colname = "REMOVING";
         rightalign = false;
         visible = true;
         flex = true;
-        index_table = [| ("off", 0L); ("on", 1L) |];
+        index_table = boolean_index_table;
       }
   | Size ->
       {
@@ -703,7 +707,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Slow_io_n ->
       {
@@ -716,7 +720,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Slow_io_t ->
       {
@@ -729,7 +733,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | State ->
       {
@@ -742,7 +746,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
   | Write_errors ->
       {
@@ -755,7 +759,7 @@ let attributes = function
         rightalign = true;
         visible = true;
         flex = false;
-        index_table = [||];
+        index_table = empty_index_table;
       }
 
 let to_string prop = (attributes prop).name
