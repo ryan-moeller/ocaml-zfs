@@ -2542,41 +2542,40 @@ let has_encryption_props nvl =
   || Nvlist.exists nvl (to_string Keyformat)
   || Nvlist.exists nvl (to_string Pbkdf2_iters)
 
-let zfs_setprop_error prop = function
+let zfs_setprop_error prop =
+  let open Error in
+  function
   | Unix.ENOSPC -> (
       match prop with
       | Quota | Refquota ->
-          ( Error.EzfsPropSpace,
-            "size is less than current used or reserved space" )
+          (EzfsPropSpace, "size is less than current used or reserved space")
       | Reservation | Refreservation ->
-          (Error.EzfsPropSpace, "size is greater than available space")
-      | _ -> Error.zfs_standard_error Unix.ENOSPC)
+          (EzfsPropSpace, "size is greater than available space")
+      | _ -> zfs_standard_error Unix.ENOSPC)
   | Unix.EROFS ->
-      let error = Error.EzfsDsReadonly in
-      (error, Error.to_string error)
-  | Unix.E2BIG -> (Error.EzfsBadProp, "property value too long")
+      let error = EzfsDsReadonly in
+      (error, to_string error)
+  | Unix.E2BIG -> (EzfsBadProp, "property value too long")
   | Unix.EOPNOTSUPP ->
-      ( Error.EzfsBadVersion,
+      ( EzfsBadVersion,
         "pool and or dataset must be upgraded to set this property or value" )
   | Unix.ERANGE -> (
       match prop with
       | Compression | Dnodesize | Recordsize ->
-          ( Error.EzfsNotSup,
-            "property setting is not allowed on bootable datasets" )
+          (EzfsNotSup, "property setting is not allowed on bootable datasets")
       | Checksum | Dedup ->
-          (Error.EzfsNotSup, "property setting is not allowed on root pools")
-      | _ -> Error.zfs_standard_error Unix.ERANGE)
+          (EzfsNotSup, "property setting is not allowed on root pools")
+      | _ -> zfs_standard_error Unix.ERANGE)
   | Unix.EINVAL ->
       if prop = Inval then
-        let error = Error.EzfsBadProp in
-        (error, Error.to_string error)
-      else Error.zfs_standard_error Unix.EINVAL
-  | Unix.EUNKNOWNERR errno
-    when errno = Error.zfs_errno_to_int Error.ZfsErrBadProp ->
-      let error = Error.EzfsBadProp in
-      (error, Error.to_string error)
+        let error = EzfsBadProp in
+        (error, to_string error)
+      else zfs_standard_error Unix.EINVAL
+  | Unix.EUNKNOWNERR errno when errno = zfs_errno_to_int ZfsErrBadProp ->
+      let error = EzfsBadProp in
+      (error, to_string error)
   | Unix.EACCES ->
       if prop = Keylocation then
-        (Error.EzfsBadProp, "keylocation may only be set on encryption roots")
-      else Error.zfs_standard_error Unix.EACCES
-  | errno -> Error.zfs_standard_error errno
+        (EzfsBadProp, "keylocation may only be set on encryption roots")
+      else zfs_standard_error Unix.EACCES
+  | errno -> zfs_standard_error errno
