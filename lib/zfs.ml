@@ -208,3 +208,29 @@ let destroy handle name =
   | Error (e, why) ->
       let what = Printf.printf "cannot destroy '%s'" name in
       Error (e, what, why)
+
+let rollback handle name targetopt =
+  match
+    let packed_props_opt =
+      Option.map
+        (fun target ->
+          let props = Nvlist.alloc () in
+          Nvlist.add_string props "target" target;
+          Nvlist.(pack props Native))
+        targetopt
+    in
+    match Ioctls.rollback handle name packed_props_opt with
+    | Ok packed_result -> Ok (Nvlist.unpack packed_result)
+    | Error Unix.EEXIST ->
+        Error
+          ( EzfsExists,
+            "there is a more recent snapshot or bookmark that cannot be \
+             destroyed" )
+    | Error Unix.ESRCH -> Error (EzfsNoEnt, "no such snapshot exists")
+    | Error Unix.EINVAL -> Error (EzfsBadType, to_string EzfsBadType)
+    | Error errno -> Error (zfs_standard_error errno)
+  with
+  | Ok result -> Ok (Option.get @@ Nvlist.lookup_string result "target")
+  | Error (e, why) ->
+      let what = Printf.printf "cannot rollback '%s'" name in
+      Error (e, what, why)
