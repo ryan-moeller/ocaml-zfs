@@ -261,3 +261,24 @@ let rename handle oldname newname flags =
   | Error (Some failed, (e, why)) ->
       let what = Printf.sprintf "cannot rename '%s'" failed in
       Error (e, what, why)
+
+(* TODO: send/recv *)
+
+let promote handle name =
+  match
+    match Ioctls.promote handle name with
+    | Ok () -> Ok ()
+    | Error (None, Unix.EACCES) ->
+        Error
+          ( EzfsCryptoFailed,
+            "cannot promote dataset outside its encryption root" )
+    | Error (Some conflict, Unix.EEXIST) ->
+        Error
+          ( EzfsExists,
+            Printf.sprintf "conflicting snapshot '%s' from parent" conflict )
+    | Error (_, errno) -> Error (zfs_standard_error errno)
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = Printf.sprintf "cannot promote '%s'" name in
+      Error (e, what, why)
