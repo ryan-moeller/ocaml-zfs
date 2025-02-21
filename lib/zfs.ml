@@ -206,7 +206,7 @@ let destroy handle name =
       (* XXX: caller must remove mountpoint *)
       Ok ()
   | Error (e, why) ->
-      let what = Printf.printf "cannot destroy '%s'" name in
+      let what = Printf.sprintf "cannot destroy '%s'" name in
       Error (e, what, why)
 
 let rollback handle name targetopt =
@@ -232,7 +232,7 @@ let rollback handle name targetopt =
   with
   | Ok result -> Ok (Option.get @@ Nvlist.lookup_string result "target")
   | Error (e, why) ->
-      let what = Printf.printf "cannot rollback '%s'" name in
+      let what = Printf.sprintf "cannot rollback '%s'" name in
       Error (e, what, why)
 
 let rename handle oldname newname flags =
@@ -256,8 +256,8 @@ let rename handle oldname newname flags =
   with
   | Ok () -> Ok ()
   | Error (None, (e, why)) ->
-      let what = Printf.printf "cannot rename to '%s'" newname in
+      let what = Printf.sprintf "cannot rename to '%s'" newname in
       Error (e, what, why)
   | Error (Some failed, (e, why)) ->
-      let what = Printf.printf "cannot rename '%s'" failed in
+      let what = Printf.sprintf "cannot rename '%s'" failed in
       Error (e, what, why)
