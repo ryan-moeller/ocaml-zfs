@@ -12,4 +12,5 @@
   (include_dirs
    /usr/src/sys/contrib/openzfs/include
    /usr/src/sys/contrib/openzfs/lib/libspl/include
-   /usr/src/sys/contrib/openzfs/lib/libspl/include/os/freebsd)))
+   /usr/src/sys/contrib/openzfs/lib/libspl/include/os/freebsd
+   /usr/src/sys/contrib/openzfs/lib/libzpool/include)))
