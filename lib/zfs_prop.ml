@@ -2220,7 +2220,10 @@ let validate nvl dataset_type zoned create keyok =
         (* Not a userprop, check if a userquota prop. *)
         match Userquota_prop.decode_propname propname zoned with
         | Some (quotaprop, rid) -> (
-            let domain = "" (* TODO: IDMAP support in decode_propname *) in
+            let domain =
+              ""
+              (* TODO: IDMAP support in decode_propname *)
+            in
             match quotaprop with
             | Userquota | Userobjquota | Groupquota | Groupobjquota
             | Projectquota | Projectobjquota ->

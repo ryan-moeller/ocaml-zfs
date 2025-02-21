@@ -852,15 +852,12 @@ let validate nvl poolname version create import =
                       [| Zfs_prop.Filesystem; Zfs_prop.Snapshot |]
                       false
                     >>= (fun () ->
-                          if
-                            String.equal poolname strval
-                            || String.starts_with ~prefix:poolname strval
-                               && String.get strval (String.length poolname)
-                                  = '/'
-                          then Ok ()
-                          else
-                            Error
-                              (Printf.sprintf "'%s' is an invalid name" strval))
+                    if
+                      String.equal poolname strval
+                      || String.starts_with ~prefix:poolname strval
+                         && String.get strval (String.length poolname) = '/'
+                    then Ok ()
+                    else Error (Printf.sprintf "'%s' is an invalid name" strval))
                     |> Result.map_error (fun msg -> (EzfsInvalidName, msg))
               | Altroot ->
                   if (not create) && not import then

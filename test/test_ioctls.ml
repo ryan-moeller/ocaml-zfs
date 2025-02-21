@@ -729,7 +729,10 @@ let () =
   let label = Option.get @@ vdev_label_read @@ List.hd vdevs in
   let vdev = Option.get @@ Nvlist.lookup_nvlist label "vdev_tree" in
   let guid = Option.get @@ Nvlist.lookup_uint64 vdev "guid" in
-  let flags = 11L (* VDEV_AUX_ERR_EXCEEDED (flags not always vdev_aux_t) *) in
+  let flags =
+    11L
+    (* VDEV_AUX_ERR_EXCEEDED (flags not always vdev_aux_t) *)
+  in
   let handle = Ioctls.open_handle () in
   (match
      Ioctls.vdev_set_state handle test_pool_name guid VdevStateFaulted flags
@@ -960,7 +963,10 @@ let () =
   in
   assert (Unix.WEXITED 0 = Unix.system mount_cmd);
   (* Make a moderately sized file so we can find and corrupt it. *)
-  let buflen = 65536 (* max size Unix.read can read *) in
+  let buflen =
+    65536
+    (* max size Unix.read can read *)
+  in
   let buffer = Bytes.create buflen in
   let content = "openzfs!" in
   let blitlen = String.length content in
@@ -1497,7 +1503,10 @@ let () =
    *)
   let pfd0, pfd1 = Unix.pipe () in
   Unix.set_nonblock pfd0;
-  let buflen = 4096 (* standard page size *) in
+  let buflen =
+    4096
+    (* standard page size *)
+  in
   let buffer = Bytes.create buflen in
   (try
      while buflen = Unix.single_write pfd0 buffer 0 buflen do
