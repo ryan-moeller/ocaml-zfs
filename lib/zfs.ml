@@ -234,3 +234,30 @@ let rollback handle name targetopt =
   | Error (e, why) ->
       let what = Printf.printf "cannot rollback '%s'" name in
       Error (e, what, why)
+
+let rename handle oldname newname flags =
+  (* XXX: caller must unmount/mount as required *)
+  (* XXX: libzfs checks names and flags *)
+  match
+    match Ioctls.rename handle oldname newname flags with
+    | Ok () -> Ok ()
+    | Error (Some failed, Unix.EEXIST)
+      when Array.mem Types.RenameRecursive flags ->
+        Error
+          ( Some failed,
+            ( EzfsExists,
+              "a child dataset already has a snapshot with the new name" ) )
+    | Error (Some failed, Unix.EACCES) ->
+        Error
+          ( Some failed,
+            ( EzfsCryptoFailed,
+              "cannot move encrypted child out of its encryption root" ) )
+    | Error (failed_opt, errno) -> Error (failed_opt, zfs_standard_error errno)
+  with
+  | Ok () -> Ok ()
+  | Error (None, (e, why)) ->
+      let what = Printf.printf "cannot rename to '%s'" newname in
+      Error (e, what, why)
+  | Error (Some failed, (e, why)) ->
+      let what = Printf.printf "cannot rename '%s'" failed in
+      Error (e, what, why)
