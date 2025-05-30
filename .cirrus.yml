@@ -1,0 +1,47 @@
+freebsd_instance:
+  cpu: 4
+  memory: 4G
+
+task:
+  matrix:
+    # No motivation to support releases at the moment
+    #- name: releases/amd64/14.2-RELEASE
+    #  freebsd_instance:
+    #    image_family: freebsd-14-2
+    - name: snapshots/amd64/15.0-CURRENT
+      freebsd_instance:
+        image_family: freebsd-15-0-snap
+  stateful: false
+  env:
+    OPAMYES: true
+    OPAMROOTISOK: true
+    NVPAIR: /tmp/ocaml-nvpair
+    POOL: existing-pool
+    VDEV: /tmp/existing-vdev
+  # SETUP
+  src_script:
+    - cd /tmp && fetch -q https://download.freebsd.org/${CIRRUS_TASK_NAME}/src.txz
+    - tar xf /tmp/src.txz -C / && rm /tmp/src.txz
+  pkg_script:
+    - pkg install -y
+      chez-scheme
+      curl
+      git-lite
+      gmake
+      ocaml-opam
+      patch
+  opam_script:
+    - opam init
+    - opam env --sexp | ./sexp-to-cirrus-env | tee -a ${CIRRUS_ENV}
+  dune_script:
+    - opam install dune
+  nvpair_script:
+    - git clone https://github.com/ryan-moeller/ocaml-nvpair ${NVPAIR}
+    - cd ${NVPAIR} && dune build && dune install
+  zfs_script:
+    - kldload zfs
+    - truncate -s 128m ${VDEV}
+    - zpool create ${POOL} ${VDEV}
+  # BEGIN
+  build_script: dune build
+  test_script: dune test

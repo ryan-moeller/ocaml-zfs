@@ -1,0 +1,8 @@
+#!/usr/local/bin/petite --script
+(for-each
+  (lambda (var)
+    (display (car var))
+    (display "=")
+    (display (cadr var))
+    (newline))
+  (get-datum (current-input-port)))
