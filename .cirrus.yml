@@ -4,13 +4,13 @@ freebsd_instance:
 
 task:
   matrix:
-    # No motivation to support releases at the moment
+    # No motivation to support older releases at the moment
     #- name: releases/amd64/14.2-RELEASE
     #  freebsd_instance:
     #    image_family: freebsd-14-2
-    - name: snapshots/amd64/15.0-PRERELEASE
+    - name: releases/amd64/15.0-ALPHA1
       freebsd_instance:
-        image_family: freebsd-15-0-snap
+        image_family: freebsd-15-0
   stateful: false
   env:
     OPAMYES: true
