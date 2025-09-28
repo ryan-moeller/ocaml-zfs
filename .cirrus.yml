@@ -8,7 +8,7 @@ task:
     #- name: releases/amd64/14.2-RELEASE
     #  freebsd_instance:
     #    image_family: freebsd-14-2
-    - name: releases/amd64/15.0-ALPHA1
+    - name: snapshots/amd64/15.0-ALPHA4
       freebsd_instance:
         image_family: freebsd-15-0
   stateful: false
