@@ -23,8 +23,8 @@ task:
     VDEV: /tmp/existing-vdev
   # SETUP
   src_script:
-    - cd /tmp && fetch -q https://download.freebsd.org/${CIRRUS_TASK_NAME}/src.txz
-    - tar xf /tmp/src.txz -C / && rm /tmp/src.txz
+    - test -e /usr/src/sys/contrib/openzfs/include/sys/zfs_ioctl.h ||
+      fetch -o - https://download.freebsd.org/${CIRRUS_TASK_NAME}/src.txz | tar x -C /
   pkg_script:
     - pkg install -y
       chez-scheme
