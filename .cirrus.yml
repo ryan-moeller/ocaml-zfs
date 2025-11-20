@@ -8,6 +8,9 @@ task:
     #- name: releases/amd64/14.2-RELEASE
     #  freebsd_instance:
     #    image_family: freebsd-14-2
+    - name: snapshots/amd64/15.0-STABLE
+      freebsd_instance:
+        image_family: freebsd-15-0-amd64-ufs-snap
     - name: releases/amd64/15.0-RC2
       freebsd_instance:
         image_family: freebsd-15-0-amd64-ufs
