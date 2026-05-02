@@ -4,29 +4,36 @@ type t =
   | Avz_v2
   | Blake3
   | Block_cloning
+  | Block_cloning_endian
   | Bookmark_v2
   | Bookmark_written
   | Bookmarks
   | Device_rebuild
   | Device_removal
+  | Dynamic_gang_header
   | Draid
+  | Draid_fail_domains
   | Edonr
   | Embedded_data
   | Empty_bpobj
   | Enabled_txg
   | Encryption
   | Extensible_dataset
+  | Fast_dedup
   | Fs_ss_limit
   | Head_errlog
   | Hole_birth
   | Large_blocks
   | Large_dnode
+  | Large_microzap
   | Livelist
   | Log_spacemap
+  | Longname
   | Lz4_compress
   | Multi_vdev_crash_dump
   | None
   | Obsolete_counts
+  | Physical_rewrite
   | Pool_checkpoint
   | Project_quota
   | Raidz_expansion
@@ -47,28 +54,35 @@ let of_string = function
   | "async_destroy" -> Async_destroy
   | "blake3" -> Blake3
   | "block_cloning" -> Block_cloning
+  | "block_cloning_endian" -> Block_cloning_endian
   | "bookmark_v2" -> Bookmark_v2
   | "bookmark_written" -> Bookmark_written
   | "bookmarks" -> Bookmarks
   | "device_rebuild" -> Device_rebuild
   | "device_removal" -> Device_removal
   | "draid" -> Draid
+  | "draid_failure_domains" -> Draid_fail_domains
+  | "dynamic_gang_header" -> Dynamic_gang_header
   | "edonr" -> Edonr
   | "embedded_data" -> Embedded_data
   | "empty_bpobj" -> Empty_bpobj
   | "enabled_txg" -> Enabled_txg
   | "encryption" -> Encryption
   | "extensible_dataset" -> Extensible_dataset
+  | "fast_dedup" -> Fast_dedup
   | "filesystem_limits" -> Fs_ss_limit
   | "head_errlog" -> Head_errlog
   | "hole_birth" -> Hole_birth
   | "large_blocks" -> Large_blocks
   | "large_dnode" -> Large_dnode
+  | "large_microzap" -> Large_microzap
   | "livelist" -> Livelist
   | "log_spacemap" -> Log_spacemap
+  | "longname" -> Longname
   | "lz4_compress" -> Lz4_compress
   | "multi_vdev_crash_dump" -> Multi_vdev_crash_dump
   | "obsolete_counts" -> Obsolete_counts
+  | "physical_rewrite" -> Physical_rewrite
   | "project_quota" -> Project_quota
   | "raidz_expansion" -> Raidz_expansion
   | "redacted_datasets" -> Redacted_datasets
@@ -96,6 +110,7 @@ type attributes = {
   required_for_mos : bool;
   activate_on_enable : bool;
   per_dataset : bool;
+  no_upgrade : bool;
   depends : t array;
 }
 
@@ -110,6 +125,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Async_destroy ->
@@ -121,6 +137,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Avz_v2 ->
@@ -132,6 +149,7 @@ let attributes = function
         required_for_mos = true;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Blake3 ->
@@ -143,6 +161,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Block_cloning ->
@@ -154,6 +173,19 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
+        depends = [||];
+      }
+  | Block_cloning_endian ->
+      {
+        name = "block_cloning_endian";
+        guid = "com.truenas:block_cloning_endian";
+        description = "Fixes BRT ZAP endianness on new pools.";
+        readonly_compat = true;
+        required_for_mos = false;
+        activate_on_enable = false;
+        per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Bookmark_v2 ->
@@ -165,6 +197,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Extensible_dataset; Bookmarks |];
       }
   | Bookmark_written ->
@@ -179,6 +212,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Bookmark_v2; Extensible_dataset; Bookmarks |];
       }
   | Bookmarks ->
@@ -190,6 +224,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Device_rebuild ->
@@ -201,6 +236,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Device_removal ->
@@ -213,6 +249,7 @@ let attributes = function
         required_for_mos = true;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Draid ->
@@ -224,6 +261,31 @@ let attributes = function
         required_for_mos = true;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
+        depends = [||];
+      }
+  | Draid_fail_domains ->
+      {
+        name = "draid_failure_domains";
+        guid = "com.seagate:draid_failure_domains";
+        description = "Support for failure domains in dRAID";
+        readonly_compat = false;
+        required_for_mos = true;
+        activate_on_enable = false;
+        per_dataset = false;
+        no_upgrade = false;
+        depends = [| Draid |];
+      }
+  | Dynamic_gang_header ->
+      {
+        name = "dynamic_gang_header";
+        guid = "com.klarasystems:dynamic_gang_header";
+        description = "com.klarasystems:dynamic_gang_header";
+        readonly_compat = false;
+        required_for_mos = true;
+        activate_on_enable = false;
+        per_dataset = false;
+        no_upgrade = true;
         depends = [||];
       }
   | Edonr ->
@@ -235,6 +297,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Embedded_data ->
@@ -246,6 +309,7 @@ let attributes = function
         required_for_mos = true;
         activate_on_enable = true;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Empty_bpobj ->
@@ -257,6 +321,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Enabled_txg ->
@@ -268,6 +333,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Encryption ->
@@ -279,6 +345,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset; Bookmark_v2 |];
       }
   | Extensible_dataset ->
@@ -290,6 +357,19 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
+        depends = [||];
+      }
+  | Fast_dedup ->
+      {
+        name = "fast_dedup";
+        guid = "com.klarasystems:fast_dedup";
+        description = "Support for advanced deduplication";
+        readonly_compat = true;
+        required_for_mos = false;
+        activate_on_enable = false;
+        per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Fs_ss_limit ->
@@ -301,6 +381,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Head_errlog ->
@@ -312,6 +393,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = true;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Hole_birth ->
@@ -323,6 +405,7 @@ let attributes = function
         required_for_mos = true;
         activate_on_enable = true;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Enabled_txg |];
       }
   | Large_blocks ->
@@ -334,6 +417,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Large_dnode ->
@@ -345,7 +429,20 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
+      }
+  | Large_microzap ->
+      {
+        name = "large_microzap";
+        guid = "com.klarasystems:large_microzap";
+        description = "Support for microzaps larger than 128KB.";
+        readonly_compat = true;
+        required_for_mos = false;
+        activate_on_enable = false;
+        per_dataset = true;
+        no_upgrade = false;
+        depends = [| Extensible_dataset; Large_blocks |];
       }
   | Livelist ->
       {
@@ -356,6 +453,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Log_spacemap ->
@@ -369,7 +467,20 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Spacemap_v2 |];
+      }
+  | Longname ->
+      {
+        name = "longname";
+        guid = "org.zfsonlinux:longname";
+        description = "support filename up to 1024 bytes";
+        readonly_compat = false;
+        required_for_mos = false;
+        activate_on_enable = false;
+        per_dataset = true;
+        no_upgrade = false;
+        depends = [| Extensible_dataset |];
       }
   | Lz4_compress ->
       {
@@ -380,6 +491,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = true;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Multi_vdev_crash_dump ->
@@ -391,6 +503,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Obsolete_counts ->
@@ -404,7 +517,21 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Extensible_dataset; Device_removal |];
+      }
+  | Physical_rewrite ->
+      {
+        name = "physical_rewrite";
+        guid = "com.truenas:physical_rewrite";
+        description =
+          "Support for preserving logical birth time during rewrite.";
+        readonly_compat = true;
+        required_for_mos = false;
+        activate_on_enable = false;
+        per_dataset = true;
+        no_upgrade = false;
+        depends = [| Extensible_dataset |];
       }
   | Pool_checkpoint ->
       {
@@ -415,6 +542,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Project_quota ->
@@ -426,6 +554,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Raidz_expansion ->
@@ -437,6 +566,7 @@ let attributes = function
         required_for_mos = true;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Redacted_datasets ->
@@ -450,6 +580,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Redaction_bookmarks ->
@@ -463,6 +594,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Bookmark_v2; Extensible_dataset; Bookmarks |];
       }
   | Redaction_list_spill ->
@@ -476,6 +608,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [| Redaction_bookmarks |];
       }
   | Resilver_defer ->
@@ -488,6 +621,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Sha512 ->
@@ -499,6 +633,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Skein ->
@@ -510,6 +645,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Spacemap_histogram ->
@@ -521,6 +657,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Spacemap_v2 ->
@@ -533,6 +670,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = true;
         per_dataset = false;
+        no_upgrade = false;
         depends = [||];
       }
   | Userobj_accounting ->
@@ -544,6 +682,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Zilsaxattr ->
@@ -555,6 +694,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
   | Zstd_compress ->
@@ -566,6 +706,7 @@ let attributes = function
         required_for_mos = false;
         activate_on_enable = false;
         per_dataset = true;
+        no_upgrade = false;
         depends = [| Extensible_dataset |];
       }
 
@@ -578,28 +719,35 @@ let all_features =
     Avz_v2;
     Blake3;
     Block_cloning;
+    Block_cloning_endian;
     Bookmark_v2;
     Bookmark_written;
     Bookmarks;
     Device_rebuild;
     Device_removal;
+    Dynamic_gang_header;
     Draid;
+    Draid_fail_domains;
     Edonr;
     Embedded_data;
     Empty_bpobj;
     Enabled_txg;
     Encryption;
     Extensible_dataset;
+    Fast_dedup;
     Fs_ss_limit;
     Head_errlog;
     Hole_birth;
     Large_blocks;
     Large_dnode;
+    Large_microzap;
     Livelist;
     Log_spacemap;
+    Longname;
     Lz4_compress;
     Multi_vdev_crash_dump;
     Obsolete_counts;
+    Physical_rewrite;
     Pool_checkpoint;
     Project_quota;
     Raidz_expansion;
