@@ -1824,7 +1824,8 @@ let () =
 let () =
   let vdevs = common_setup () in
   let args = Nvlist.alloc () in
-  Nvlist.add_int32 args "wait_activity" 1l (* ZPOOL_WAIT_FREE *);
+  let wait_activity = Util.int_of_zpool_wait_activity ZpoolWaitFree in
+  Nvlist.add_int32 args "wait_activity" (Int32.of_int wait_activity);
   let packed_args = Nvlist.pack args Nvlist.Native in
   let handle = Ioctls.open_handle () in
   let result =
@@ -1842,7 +1843,8 @@ let () =
 let () =
   let vdevs = common_setup () in
   let args = Nvlist.alloc () in
-  Nvlist.add_int32 args "wait_activity" 0l (* ZFS_WAIT_DELETEQ *);
+  let wait_activity = Util.int_of_zfs_wait_activity ZfsWaitDeleteQ in
+  Nvlist.add_int32 args "wait_activity" (Int32.of_int wait_activity);
   let packed_args = Nvlist.pack args Nvlist.Native in
   let handle = Ioctls.open_handle () in
   let result =

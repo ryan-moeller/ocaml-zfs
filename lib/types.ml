@@ -146,3 +146,16 @@ type pool_initialize_func =
   | PoolInitializeUninit
 
 type pool_trim_func = PoolTrimStart | PoolTrimCancel | PoolTrimSuspend
+
+type zpool_wait_activity =
+  | ZpoolWaitCkptDiscard
+  | ZpoolWaitFree
+  | ZpoolWaitInitialize
+  | ZpoolWaitReplace
+  | ZpoolWaitRemove
+  | ZpoolWaitResilver
+  | ZpoolWaitScrub
+  | ZpoolWaitTrim
+  | ZpoolWaitRaidzExpand
+
+type zfs_wait_activity = ZfsWaitDeleteQ
