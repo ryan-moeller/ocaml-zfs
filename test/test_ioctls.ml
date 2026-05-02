@@ -92,7 +92,7 @@ let common_pack_root_vdevs vdevs =
          vdevs
   in
   Nvlist.add_nvlist_array root "children" disks;
-  Nvlist.pack root Nvlist.Native
+  Nvlist.(pack root Native)
 
 let common_pack_all_features () =
   let props = Nvlist.alloc () in
@@ -102,7 +102,7 @@ let common_pack_all_features () =
       let name = Printf.sprintf "feature@%s" attrs.name in
       Nvlist.add_uint64 props name 0L)
     Zfeature.all_features;
-  Nvlist.pack props Nvlist.Native
+  Nvlist.(pack props Native)
 
 let common_zpool_create vdevs =
   let handle = Ioctls.open_handle () in
@@ -168,7 +168,7 @@ let common_get_config vdevs =
   Nvlist.add_uint64 policy "load-request-txg" (-1L);
   Nvlist.add_uint32 policy "load-rewind-policy" 1l;
   Nvlist.add_nvlist conf "load-policy" policy;
-  let packed_conf = Nvlist.pack conf Nvlist.Native in
+  let packed_conf = Nvlist.(pack conf Native) in
   let handle = Ioctls.open_handle () in
   match Ioctls.pool_tryimport handle packed_conf with
   | Ok packed_config -> packed_config
@@ -195,7 +195,7 @@ let common_vdev_attach vdevs name =
 let common_dataset_create name =
   let args = Nvlist.alloc () in
   Nvlist.add_int32 args "type" 2l (* ObjsetTypeZfs *);
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   match Ioctls.create handle name packed_args with
   | Ok () -> ()
@@ -209,7 +209,7 @@ let common_snapshot_create name =
   let snaps = Nvlist.alloc () in
   Nvlist.add_boolean snaps name;
   Nvlist.add_nvlist args "snaps" snaps;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   match Ioctls.snapshot handle pool packed_args with
   | Ok () -> ()
@@ -224,7 +224,7 @@ let common_snapshot_create name =
 let common_clone_create origin name =
   let args = Nvlist.alloc () in
   Nvlist.add_string args "origin" origin;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   match Ioctls.clone handle name packed_args with
   | Ok () -> ()
@@ -239,7 +239,7 @@ let common_clone_create origin name =
 let common_bookmark_create pool snap name =
   let args = Nvlist.alloc () in
   Nvlist.add_string args name snap;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   match Ioctls.bookmark handle pool packed_args with
   | Ok () -> ()
@@ -256,7 +256,7 @@ let common_hold_create snap tag =
   let holds = Nvlist.alloc () in
   Nvlist.add_string holds snap tag;
   Nvlist.add_nvlist args "holds" holds;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   match Ioctls.hold handle test_pool_name packed_args with
   | Ok () -> ()
@@ -333,7 +333,7 @@ let () =
   let handle = Ioctls.open_handle () in
   let props = Nvlist.alloc () in
   Nvlist.add_string props "bootfs" test_pool_name;
-  let packed = Nvlist.pack props Nvlist.Native in
+  let packed = Nvlist.(pack props Native) in
   (match Ioctls.pool_set_props handle test_pool_name packed with
   | Ok () -> ()
   | Error e ->
@@ -598,7 +598,7 @@ let () =
   let args = Nvlist.alloc () in
   Nvlist.add_uint64 args "initialize_command" 0L (* POOL_INITIALIZE_START *);
   Nvlist.add_nvlist args "initialize_vdevs" guids;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.pool_initialize handle test_pool_name packed_args with
   | Ok () -> ()
@@ -622,7 +622,7 @@ let () =
   Nvlist.add_uint64 args "scan_command"
   @@ Int64.of_int
   @@ Util.int_of_pool_scrub_cmd ScrubNormal;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.pool_scrub handle test_pool_name packed_args with
   | Ok () -> ()
@@ -636,7 +636,7 @@ let () =
   let vdevs = common_setup () in
   let args = Nvlist.alloc () in
   Nvlist.add_boolean_value args "force" false;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.pool_sync handle test_pool_name packed_args with
   | Ok () -> ()
@@ -656,7 +656,7 @@ let () =
   let trim_vdevs = Nvlist.alloc () in
   Nvlist.add_uint64 trim_vdevs vdev guid;
   Nvlist.add_nvlist args "trim_vdevs" trim_vdevs;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.pool_trim handle test_pool_name packed_args with
   | Ok () -> ()
@@ -802,7 +802,7 @@ let () =
   Nvlist.add_string conf "name" newname;
   Nvlist.add_uint64 conf "version" version;
   Nvlist.add_nvlist conf "vdev_tree" root;
-  let packed_conf = Nvlist.pack conf Nvlist.Native in
+  let packed_conf = Nvlist.(pack conf Native) in
   (* Split the pool. *)
   let handle = Ioctls.open_handle () in
   (match
@@ -856,7 +856,7 @@ let () =
   let props = Nvlist.alloc () in
   Nvlist.add_string props "comment" test_property_value;
   Nvlist.add_nvlist args "vdevprops_set_props" props;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.vdev_set_props handle test_pool_name packed_args with
   | Ok () -> ()
@@ -873,7 +873,7 @@ let () =
   let props = Nvlist.alloc () in
   Nvlist.add_boolean props "comment";
   Nvlist.add_nvlist args "vdevprops_get_props" props;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let props =
     match Ioctls.vdev_get_props handle test_pool_name packed_args with
     | Ok packed_props -> Nvlist.unpack packed_props
@@ -1217,7 +1217,7 @@ let () =
   Nvlist.add_nvlist acl "El$" perms;
   Nvlist.add_nvlist acl "ed$" perms;
   Nvlist.add_nvlist acl "Ed$" perms;
-  let packed_acl = Nvlist.pack acl Nvlist.Native in
+  let packed_acl = Nvlist.(pack acl Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.set_fsacl handle test_pool_name false packed_acl with
   | Ok () -> ()
@@ -1231,7 +1231,7 @@ let () =
   let vdevs = common_setup () in
   let props = Nvlist.alloc () in
   Nvlist.add_string props test_property_name test_property_value;
-  let packed_props = Nvlist.pack props Nvlist.Native in
+  let packed_props = Nvlist.(pack props Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.set_prop handle test_pool_name packed_props with
   | Ok () -> ()
@@ -1343,7 +1343,7 @@ let () =
   let snaps = Nvlist.alloc () in
   Nvlist.add_boolean snaps snap1;
   Nvlist.add_nvlist args "snapnv" snaps;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.redact handle snap0 packed_args with
   | Ok () -> ()
@@ -1361,7 +1361,7 @@ let () =
   let snaps = Nvlist.alloc () in
   Nvlist.add_boolean snaps test_snapshot_name;
   Nvlist.add_nvlist args "snaps" snaps;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.destroy_snaps handle test_pool_name packed_args with
   | Ok () -> ()
@@ -1441,7 +1441,7 @@ let () =
   let holds = Nvlist.alloc () in
   Nvlist.add_boolean holds test_tag_name;
   Nvlist.add_nvlist args test_snapshot_name holds;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.release handle test_pool_name packed_args with
   | Ok () -> ()
@@ -1557,7 +1557,7 @@ let () =
   let fd = Unix.openfile "/dev/null" [ Unix.O_WRONLY ] 0 in
   let args = Nvlist.alloc () in
   Nvlist.add_int32 args "fd" @@ Int32.of_int @@ Util.int_of_descr fd;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.send_new handle test_snapshot_name packed_args with
   | Ok () -> ()
@@ -1613,7 +1613,7 @@ let () =
   common_bookmark_create test_pool_name test_snapshot_name test_bookmark_name;
   let props = Nvlist.alloc () in
   Nvlist.add_boolean props "guid";
-  let packed_props = Nvlist.pack props Nvlist.Native in
+  let packed_props = Nvlist.(pack props Native) in
   let handle = Ioctls.open_handle () in
   let _bookmarks =
     match Ioctls.get_bookmarks handle test_dataset_name (Some packed_props) with
@@ -1648,7 +1648,7 @@ let () =
   common_bookmark_create test_pool_name test_snapshot_name test_bookmark_name;
   let list = Nvlist.alloc () in
   Nvlist.add_boolean list test_bookmark_name;
-  let packed_list = Nvlist.pack list Nvlist.Native in
+  let packed_list = Nvlist.(pack list Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.destroy_bookmarks handle test_pool_name packed_list with
   | Ok () -> ()
@@ -1671,7 +1671,7 @@ let () =
   Nvlist.add_uint64 args "pool_guid" pool_guid;
   Nvlist.add_uint64 args "guid" guid;
   Nvlist.add_string args "command" "";
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.nextboot handle packed_args with
   | Ok () -> ()
@@ -1692,7 +1692,7 @@ let () =
   Nvlist.add_boolean_value args "sync" true;
   Nvlist.add_uint64 args "instrlimit" test_channel_program_instrlimit;
   Nvlist.add_uint64 args "memlimit" test_channel_program_memlimit;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   let _result =
     match
@@ -1729,7 +1729,7 @@ let () =
   let vdevs = common_setup () in
   let args = Nvlist.alloc () in
   Nvlist.add_string args "message" "this is a test";
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.log_history handle packed_args with
   | Ok () -> ()
@@ -1784,7 +1784,7 @@ let () =
   common_snapshot_create snap1;
   let args = Nvlist.alloc () in
   Nvlist.add_string args "firstsnap" snap0;
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   let _result =
     match Ioctls.space_snaps handle snap1 packed_args with
@@ -1802,7 +1802,7 @@ let () =
   let bootenv = Nvlist.alloc () in
   Nvlist.add_uint64 bootenv "version" 1L (* VB_NVLIST *);
   Nvlist.add_string bootenv "testvar" "testvalue";
-  let packed_bootenv = Nvlist.pack bootenv Nvlist.Native in
+  let packed_bootenv = Nvlist.(pack bootenv Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.set_bootenv handle test_pool_name packed_bootenv with
   | Ok () -> ()
@@ -1826,7 +1826,7 @@ let () =
   let args = Nvlist.alloc () in
   let wait_activity = Util.int_of_zpool_wait_activity ZpoolWaitFree in
   Nvlist.add_int32 args "wait_activity" (Int32.of_int wait_activity);
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   let result =
     match Ioctls.wait handle test_pool_name packed_args with
@@ -1845,7 +1845,7 @@ let () =
   let args = Nvlist.alloc () in
   let wait_activity = Util.int_of_zfs_wait_activity ZfsWaitDeleteQ in
   Nvlist.add_int32 args "wait_activity" (Int32.of_int wait_activity);
-  let packed_args = Nvlist.pack args Nvlist.Native in
+  let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   let result =
     match Ioctls.wait_fs handle test_pool_name packed_args with
