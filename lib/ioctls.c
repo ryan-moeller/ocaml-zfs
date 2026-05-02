@@ -4132,6 +4132,78 @@ caml_zfs_ioc_pool_scrub(value handle, value name, value args)
 }
 
 CAMLprim value
+caml_zfs_ioc_pool_prefetch(value handle, value name, value args)
+{
+	CAMLparam3 (handle, name, args);
+	CAMLlocal1 (ret);
+#if __FreeBSD_version > 1500023
+	zfs_cmd_t zc = {"\0"};
+	int fd, err;
+
+	fd = Devzfs_val(handle);
+	if (strlcpy(zc.zc_name, String_val(name), sizeof zc.zc_name)
+	    >= sizeof zc.zc_name) {
+		ret = caml_alloc(1, 1);
+		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
+		CAMLreturn (ret);
+	}
+	zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(args);
+	zc.zc_nvlist_src_size = caml_string_length(args);
+	caml_release_runtime_system();
+	err = zfs_ioctl(fd, ZFS_IOC_POOL_PREFETCH, &zc);
+	caml_acquire_runtime_system();
+	if (err) {
+		ret = caml_alloc(1, 1);
+		Store_field(ret, 0, caml_unix_error_of_code(err));
+	} else {
+		ret = caml_alloc(1, 0);
+		Store_field(ret, 0, Val_unit);
+	}
+#else
+	(void) handle, (void) name, (void) args;
+	ret = caml_alloc(1, 1);
+	Store_field(ret, 0, caml_unix_error_of_code(ENOSYS));
+#endif
+	CAMLreturn (ret);
+}
+
+CAMLprim value
+caml_zfs_ioc_ddt_prune(value handle, value name, value args)
+{
+	CAMLparam3 (handle, name, args);
+	CAMLlocal1 (ret);
+#if __FreeBSD_version > 1500023
+	zfs_cmd_t zc = {"\0"};
+	int fd, err;
+
+	fd = Devzfs_val(handle);
+	if (strlcpy(zc.zc_name, String_val(name), sizeof zc.zc_name)
+	    >= sizeof zc.zc_name) {
+		ret = caml_alloc(1, 1);
+		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
+		CAMLreturn (ret);
+	}
+	zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(args);
+	zc.zc_nvlist_src_size = caml_string_length(args);
+	caml_release_runtime_system();
+	err = zfs_ioctl(fd, ZFS_IOC_DDT_PRUNE, &zc);
+	caml_acquire_runtime_system();
+	if (err) {
+		ret = caml_alloc(1, 1);
+		Store_field(ret, 0, caml_unix_error_of_code(err));
+	} else {
+		ret = caml_alloc(1, 0);
+		Store_field(ret, 0, Val_unit);
+	}
+#else
+	(void) handle, (void) name, (void) args;
+	ret = caml_alloc(1, 1);
+	Store_field(ret, 0, caml_unix_error_of_code(ENOSYS));
+#endif
+	CAMLreturn (ret);
+}
+
+CAMLprim value
 caml_zfs_ioc_nextboot(value handle, value args)
 {
 	CAMLparam2 (handle, args);

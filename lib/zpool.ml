@@ -833,3 +833,32 @@ let setfru handle poolname guid fru =
   | Error (e, why) ->
       let what = "cannot set fru" in
       Error (e, what, why)
+
+let prefetch handle poolname prefetch_type =
+  match
+    let args = Nvlist.alloc () in
+    let pt = Util.int_of_zpool_prefetch_type prefetch_type in
+    Nvlist.add_int32 args "prefetch_type" (Int32.of_int pt);
+    let packed_args = Nvlist.(pack args Native) in
+    Ioctls.pool_prefetch handle poolname packed_args
+    |> Result.map_error zpool_standard_error
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = Printf.sprintf "cannot prefetch '%s'" poolname in
+      Error (e, what, why)
+
+let ddt_prune handle poolname ddt_prune_unit ddt_prune_amount =
+  match
+    let args = Nvlist.alloc () in
+    let unit = Util.int_of_ddt_prune_unit ddt_prune_unit in
+    Nvlist.add_int32 args "ddt_prune_unit" (Int32.of_int unit);
+    Nvlist.add_uint64 args "ddt_prune_amount" ddt_prune_amount;
+    let packed_args = Nvlist.(pack args Native) in
+    Ioctls.ddt_prune handle poolname packed_args
+    |> Result.map_error zpool_standard_error
+  with
+  | Ok () -> Ok ()
+  | Error (e, why) ->
+      let what = Printf.sprintf "cannot prune ddt of '%s'" poolname in
+      Error (e, what, why)

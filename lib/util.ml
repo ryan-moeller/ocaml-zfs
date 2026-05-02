@@ -65,6 +65,12 @@ external int_of_zpool_wait_activity : zpool_wait_activity -> int
 external int_of_zfs_wait_activity : zfs_wait_activity -> int
   = "caml_zfs_util_int_of_t"
 
+external int_of_zpool_prefetch_type : zpool_prefetch_type -> int
+  = "caml_zfs_util_int_of_t"
+
+external int_of_ddt_prune_unit : ddt_prune_unit -> int
+  = "caml_zfs_util_int_of_t"
+
 external get_system_hostid : unit -> int32 = "caml_zfs_util_get_system_hostid"
 external getzoneid : unit -> int = "caml_zfs_util_getzoneid"
 external error_of_int : int -> Unix.error = "caml_zfs_util_error_of_int"

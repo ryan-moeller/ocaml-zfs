@@ -474,6 +474,14 @@ external vdev_set_props :
 external pool_scrub : handle -> string -> bytes -> (unit, Unix.error) result
   = "caml_zfs_ioc_pool_scrub"
 
+(* pool_prefetch handle name packed_args *)
+external pool_prefetch : handle -> string -> bytes -> (unit, Unix.error) result
+  = "caml_zfs_ioc_pool_prefetch"
+
+(* ddt_prune handle name packed_args *)
+external ddt_prune : handle -> string -> bytes -> (unit, Unix.error) result
+  = "caml_zfs_ioc_ddt_prune"
+
 (* nextboot handle packed_args *)
 external nextboot : handle -> bytes -> (unit, Unix.error) result
   = "caml_zfs_ioc_nextboot"

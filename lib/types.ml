@@ -159,3 +159,13 @@ type zpool_wait_activity =
   | ZpoolWaitRaidzExpand
 
 type zfs_wait_activity = ZfsWaitDeleteQ
+
+type zpool_prefetch_type =
+  | ZpoolPrefetchNone
+  | ZpoolPrefetchDdt
+  | ZpoolPrefetchBrt
+
+type ddt_prune_unit =
+  | ZpoolDdtPruneNone
+  | ZpoolDdtPruneAge
+  | ZpoolDdtPrunePercentage

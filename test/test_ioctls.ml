@@ -1859,3 +1859,40 @@ let () =
   common_cleanup vdevs
 
 (* load_key, unload_key, change_key are too complicated for these tests *)
+
+(* pool_prefetch *)
+let () =
+  let vdevs = common_setup () in
+  let args = Nvlist.alloc () in
+  let prefetch_type = Util.int_of_zpool_prefetch_type ZpoolPrefetchBrt in
+  Nvlist.add_int32 args "prefetch_type" (Int32.of_int prefetch_type);
+  let packed_args = Nvlist.(pack args Native) in
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.pool_prefetch handle test_pool_name packed_args with
+    | Ok () -> ()
+    | Error Unix.ENOSYS ->
+        Printf.eprintf "pool_prefetch not supported\n";
+        ()
+    | Error e ->
+        Printf.eprintf "pool_prefetch failed\n";
+        failwith @@ Unix.error_message e);
+  common_cleanup vdevs
+
+(* ddt_prune *)
+let () =
+  let vdevs = common_setup () in
+  let args = Nvlist.alloc () in
+  let ddt_prune_unit = Util.int_of_ddt_prune_unit ZpoolDdtPrunePercentage in
+  Nvlist.add_int32 args "ddt_prune_unit" (Int32.of_int ddt_prune_unit);
+  Nvlist.add_uint64 args "ddt_prune_amount" (Int64.of_int 100);
+  let packed_args = Nvlist.(pack args Native) in
+  let handle = Ioctls.open_handle () in
+  (match Ioctls.ddt_prune handle test_pool_name packed_args with
+    | Ok () -> ()
+    | Error Unix.ENOSYS ->
+        Printf.eprintf "ddt_prune not supported\n";
+        ()
+    | Error e ->
+        Printf.eprintf "ddt_prune failed\n";
+        failwith @@ Unix.error_message e);
+  common_cleanup vdevs
