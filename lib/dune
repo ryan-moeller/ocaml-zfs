@@ -8,10 +8,10 @@
   (flags
    :standard
    -include
-   /usr/src/sys/contrib/openzfs/include/os/freebsd/spl/sys/ccompile.h)
+   /usr/src/sys/contrib/openzfs/include/os/freebsd/spl/sys/ccompile.h
+   -I
+   /usr/src/sys/contrib/openzfs/lib/libzpool/include)
   (include_dirs
    /usr/src/sys/contrib/openzfs/include
    /usr/src/sys/contrib/openzfs/lib/libspl/include
-   /usr/src/sys/contrib/openzfs/lib/libspl/include/os/freebsd
-   /usr/src/sys/contrib/openzfs/lib/libzpool/include
-   )))
+   /usr/src/sys/contrib/openzfs/lib/libspl/include/os/freebsd)))
