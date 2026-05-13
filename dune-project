@@ -19,7 +19,7 @@
  (name zfs)
  (synopsis "Bindings for OpenZFS ioctls")
  (description "Functions for managing ZFS")
- (depends ocaml dune str nvpair unix)
+ (depends ocaml dune str nvpair sysctl unix)
  (tags
   (topics OpenZFS ZFS)))
 

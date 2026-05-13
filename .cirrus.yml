@@ -16,6 +16,7 @@ task:
     OPAMYES: true
     OPAMROOTISOK: true
     NVPAIR: /tmp/ocaml-nvpair
+    SYSCTL: /tmp/ocaml-sysctl
     POOL: existing-pool
     VDEV: /tmp/existing-vdev
   # SETUP
@@ -38,6 +39,9 @@ task:
   nvpair_script:
     - git clone https://github.com/ryan-moeller/ocaml-nvpair ${NVPAIR}
     - cd ${NVPAIR} && dune build && dune install
+  sysctl_script:
+    - git clone https://github.com/ryan-moeller/ocaml-sysctl ${SYSCTL}
+    - cd ${SYSCTL} && dune build && dune install
   zfs_script:
     - kldload zfs
     - truncate -s 128m ${VDEV}

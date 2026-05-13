@@ -713,53 +713,65 @@ let attributes = function
 let to_string prop = (attributes prop).name
 
 let all_features =
-  [|
-    Allocation_classes;
+  (* Keep in enum spa_features order for ease of maintenance. *)
+  let features = [|
     Async_destroy;
-    Avz_v2;
-    Blake3;
-    Block_cloning;
-    Block_cloning_endian;
-    Bookmark_v2;
-    Bookmark_written;
-    Bookmarks;
-    Device_rebuild;
-    Device_removal;
-    Dynamic_gang_header;
-    Draid;
-    Draid_fail_domains;
-    Edonr;
-    Embedded_data;
     Empty_bpobj;
-    Enabled_txg;
-    Encryption;
-    Extensible_dataset;
-    Fast_dedup;
-    Fs_ss_limit;
-    Head_errlog;
-    Hole_birth;
-    Large_blocks;
-    Large_dnode;
-    Large_microzap;
-    Livelist;
-    Log_spacemap;
-    Longname;
     Lz4_compress;
     Multi_vdev_crash_dump;
-    Obsolete_counts;
-    Physical_rewrite;
-    Pool_checkpoint;
-    Project_quota;
-    Raidz_expansion;
-    Redacted_datasets;
-    Redaction_bookmarks;
-    Redaction_list_spill;
-    Resilver_defer;
+    Spacemap_histogram;
+    Enabled_txg;
+    Hole_birth;
+    Extensible_dataset;
+    Embedded_data;
+    Bookmarks;
+    Fs_ss_limit;
+    Large_blocks;
+    Large_dnode;
     Sha512;
     Skein;
-    Spacemap_histogram;
-    Spacemap_v2;
+    Edonr;
     Userobj_accounting;
-    Zilsaxattr;
+    Encryption;
+    Project_quota;
+    Device_removal;
+    Obsolete_counts;
+    Pool_checkpoint;
+    Spacemap_v2;
+    Allocation_classes;
+    Resilver_defer;
+    Bookmark_v2;
+    Redaction_bookmarks;
+    Redacted_datasets;
+    Bookmark_written;
+    Log_spacemap;
+    Livelist;
+    Device_rebuild;
     Zstd_compress;
-  |]
+    Draid;
+    Zilsaxattr;
+    Head_errlog;
+    Blake3;
+    Block_cloning;
+    Avz_v2;
+    Redaction_list_spill;
+    Raidz_expansion;
+    Fast_dedup;
+    Longname;
+    Large_microzap;
+  |] in
+  match Sysctl.getbyname "kern.osreldate" with
+  | Sysctl.Int freebsd_version ->
+      if freebsd_version <= 1500056 then features
+      else begin
+        let features = Array.append features [|
+          Dynamic_gang_header;
+          Block_cloning_endian;
+          Physical_rewrite;
+        |] in
+        if freebsd_version <= 1600015 then features
+        else begin
+          Array.append features [| Draid_fail_domains; |]
+        end
+      end
+  | _ -> failwith "kern.osreldate expected Int"

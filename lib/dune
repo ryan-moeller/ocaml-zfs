@@ -1,7 +1,7 @@
 (library
  (name lib)
  (public_name zfs)
- (libraries nvpair str unix)
+ (libraries nvpair str sysctl unix)
  (foreign_stubs
   (language c)
   (names util ioctls)
