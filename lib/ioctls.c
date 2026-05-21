@@ -86,7 +86,7 @@ zfs_ioctl(int fd, unsigned long request, zfs_cmd_t *zc)
 	zp.zfs_cmd_size = sizeof (zfs_cmd_t);
 	zp.zfs_ioctl_version = ZFS_IOCVER_OZFS;
 	err = ioctl(fd, _IOWR('Z', request, zfs_iocparm_t), &zp);
-	if (err == 0 & oldsize < zc->zc_nvlist_dst_size) {
+	if (err == 0 && oldsize < zc->zc_nvlist_dst_size) {
 		err = ENOMEM;
 	} else if (err) {
 		err = errno;
