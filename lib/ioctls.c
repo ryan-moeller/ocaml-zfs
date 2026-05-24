@@ -817,7 +817,7 @@ caml_zfs_ioc_vdev_setfru(value handle, value name, value guid, value fru)
 		CAMLreturn (ret);
 	}
 	zc.zc_guid = Int64_val(guid);
-	if (strlcpy(zc.zc_value, String_val(name), sizeof zc.zc_value)
+	if (strlcpy(zc.zc_value, String_val(fru), sizeof zc.zc_value)
 	    >= sizeof zc.zc_value) {
 		ret = caml_alloc(1, 1);
 		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
