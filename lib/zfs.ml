@@ -241,25 +241,19 @@ let rename handle oldname newname flags =
   match
     match Ioctls.rename handle oldname newname flags with
     | Ok () -> Ok ()
-    | Error (Some failed, Unix.EEXIST)
-      when Array.mem Types.RenameRecursive flags ->
+    | Error Unix.EEXIST when Array.mem Types.RenameRecursive flags ->
         Error
-          ( Some failed,
-            ( EzfsExists,
-              "a child dataset already has a snapshot with the new name" ) )
-    | Error (Some failed, Unix.EACCES) ->
+          ( EzfsExists,
+            "a child dataset already has a snapshot with the new name" )
+    | Error Unix.EACCES ->
         Error
-          ( Some failed,
-            ( EzfsCryptoFailed,
-              "cannot move encrypted child out of its encryption root" ) )
-    | Error (failed_opt, errno) -> Error (failed_opt, zfs_standard_error errno)
+          ( EzfsCryptoFailed,
+            "cannot move encrypted child out of its encryption root" )
+    | Error errno -> Error (zfs_standard_error errno)
   with
   | Ok () -> Ok ()
-  | Error (None, (e, why)) ->
-      let what = Printf.sprintf "cannot rename to '%s'" newname in
-      Error (e, what, why)
-  | Error (Some failed, (e, why)) ->
-      let what = Printf.sprintf "cannot rename '%s'" failed in
+  | Error (e, why) ->
+      let what = Printf.sprintf "cannot rename '%s' to '%s'" oldname newname in
       Error (e, what, why)
 
 (* TODO: send/recv *)

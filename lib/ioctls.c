@@ -1308,27 +1308,21 @@ CAMLprim value
 caml_zfs_ioc_rename(value handle, value oldname, value newname, value flags)
 {
 	CAMLparam4 (handle, oldname, newname, flags);
-	CAMLlocal3 (failed, tuple, ret);
+	CAMLlocal1 (ret);
 	zfs_cmd_t zc = {"\0"};
 	int fd, err;
 
 	fd = Devzfs_val(handle);
 	if (strlcpy(zc.zc_name, String_val(oldname), sizeof zc.zc_name)
 	    >= sizeof zc.zc_name) {
-		tuple = caml_alloc_tuple(2);
-		Store_field(tuple, 0, Val_none);
-		Store_field(tuple, 1, caml_unix_error_of_code(ENAMETOOLONG));
 		ret = caml_alloc(1, 1);
-		Store_field(ret, 0, tuple);
+		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
 		CAMLreturn (ret);
 	}
 	if (strlcpy(zc.zc_value, String_val(newname), sizeof zc.zc_value)
 	    >= sizeof zc.zc_value) {
-		tuple = caml_alloc_tuple(2);
-		Store_field(tuple, 0, Val_none);
-		Store_field(tuple, 1, caml_unix_error_of_code(ENAMETOOLONG));
 		ret = caml_alloc(1, 1);
-		Store_field(ret, 0, tuple);
+		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
 		CAMLreturn (ret);
 	}
 	for (uint_t i = 0; i < Wosize_val(flags); i++) {
@@ -1338,12 +1332,8 @@ caml_zfs_ioc_rename(value handle, value oldname, value newname, value flags)
 	err = zfs_ioctl(fd, ZFS_IOC_RENAME, &zc);
 	caml_acquire_runtime_system();
 	if (err) {
-		failed = caml_copy_string(zc.zc_name);
-		tuple = caml_alloc_tuple(2);
-		Store_field(tuple, 0, caml_alloc_some(failed));
-		Store_field(tuple, 1, caml_unix_error_of_code(err));
 		ret = caml_alloc(1, 1);
-		Store_field(ret, 0, tuple);
+		Store_field(ret, 0, caml_unix_error_of_code(err));
 	} else {
 		ret = caml_alloc(1, 0);
 		Store_field(ret, 0, Val_unit);

@@ -1270,10 +1270,7 @@ let () =
   let handle = Ioctls.open_handle () in
   (match Ioctls.rename handle test_dataset_name newname [||] with
   | Ok () -> ()
-  | Error (Some failed, e) ->
-      Printf.eprintf "rename failed on %s\n" failed;
-      failwith @@ Unix.error_message e
-  | Error (None, e) ->
+  | Error e ->
       Printf.eprintf "rename failed\n";
       failwith @@ Unix.error_message e);
   common_cleanup vdevs

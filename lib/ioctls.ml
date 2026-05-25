@@ -158,11 +158,8 @@ external rollback :
 
 (* rename handle oldname newname flags *)
 external rename :
-  handle ->
-  string ->
-  string ->
-  rename_flag array ->
-  (unit, string option * Unix.error) result = "caml_zfs_ioc_rename"
+  handle -> string -> string -> rename_flag array -> (unit, Unix.error) result
+  = "caml_zfs_ioc_rename"
 
 (* recv handle name packed_props packed_override snapname origin fd begin_rec force *)
 external recv :
