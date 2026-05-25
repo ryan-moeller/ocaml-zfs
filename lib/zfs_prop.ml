@@ -2509,20 +2509,18 @@ let validate_name name dstypes modifying =
     match
       Str.split_delim (Str.regexp "[/@#]") name
       |> List.find_map (function
-           | "" ->
-               Some "empty component or misplaced '@' or '#' delimiter in name"
-           | "." -> Some "self reference, '.' is found in name"
-           | ".." -> Some "parent reference, '..' is found in name"
-           | component ->
-               String.to_seq component
-               |> Seq.find_map (fun c ->
-                      let valid_chars =
-                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.: \
-                         %"
-                      in
-                      if String.contains valid_chars c then None
-                      else
-                        Some (Printf.sprintf "invalid character '%c' in name" c)))
+        | "" -> Some "empty component or misplaced '@' or '#' delimiter in name"
+        | "." -> Some "self reference, '.' is found in name"
+        | ".." -> Some "parent reference, '..' is found in name"
+        | component ->
+            String.to_seq component
+            |> Seq.find_map (fun c ->
+                let valid_chars =
+                  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.: \
+                   %"
+                in
+                if String.contains valid_chars c then None
+                else Some (Printf.sprintf "invalid character '%c' in name" c)))
     with
     | Some errmsg -> Error errmsg
     | None ->
@@ -2537,11 +2535,11 @@ let validate_name name dstypes modifying =
 let has_encryption_props nvl =
   let open Nvpair in
   (match Nvlist.lookup_uint64 nvl (to_string Encryption) with
-  | Some encryption when encryption != 0L -> true
-  | _ -> false)
+    | Some encryption when encryption != 0L -> true
+    | _ -> false)
   || (match Nvlist.lookup_string nvl (to_string Keylocation) with
-     | Some keylocation when keylocation != "none" -> true
-     | _ -> false)
+    | Some keylocation when keylocation != "none" -> true
+    | _ -> false)
   || Nvlist.exists nvl (to_string Keyformat)
   || Nvlist.exists nvl (to_string Pbkdf2_iters)
 

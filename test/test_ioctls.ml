@@ -1866,13 +1866,13 @@ let () =
   let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.pool_prefetch handle test_pool_name packed_args with
-    | Ok () -> ()
-    | Error Unix.ENOSYS ->
-        Printf.eprintf "pool_prefetch not supported\n";
-        ()
-    | Error e ->
-        Printf.eprintf "pool_prefetch failed\n";
-        failwith @@ Unix.error_message e);
+  | Ok () -> ()
+  | Error Unix.ENOSYS ->
+      Printf.eprintf "pool_prefetch not supported\n";
+      ()
+  | Error e ->
+      Printf.eprintf "pool_prefetch failed\n";
+      failwith @@ Unix.error_message e);
   common_cleanup vdevs
 
 (* ddt_prune *)
@@ -1885,11 +1885,11 @@ let () =
   let packed_args = Nvlist.(pack args Native) in
   let handle = Ioctls.open_handle () in
   (match Ioctls.ddt_prune handle test_pool_name packed_args with
-    | Ok () -> ()
-    | Error Unix.ENOSYS ->
-        Printf.eprintf "ddt_prune not supported\n";
-        ()
-    | Error e ->
-        Printf.eprintf "ddt_prune failed\n";
-        failwith @@ Unix.error_message e);
+  | Ok () -> ()
+  | Error Unix.ENOSYS ->
+      Printf.eprintf "ddt_prune not supported\n";
+      ()
+  | Error e ->
+      Printf.eprintf "ddt_prune failed\n";
+      failwith @@ Unix.error_message e);
   common_cleanup vdevs

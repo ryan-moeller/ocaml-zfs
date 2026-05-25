@@ -45,24 +45,24 @@ let decode_propname s zoned =
   let ( >>= ) = Option.bind in
   Option.join
   @@ Scanf.sscanf_opt s "%s@@%s" (fun propname ident ->
-         of_string_opt propname >>= fun prop ->
-         match prop with
-         | Userused | Userquota | Userobjused | Userobjquota -> (
-             try
-               let pw = Unix.getpwnam ident in
-               if zoned && Util.getzoneid () != 0 then None
-               else Some (prop, pw.pw_uid)
-             with Not_found ->
-               Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
-         | Groupused | Groupquota | Groupobjused | Groupobjquota -> (
-             try
-               let gr = Unix.getgrnam ident in
-               if zoned && Util.getzoneid () != 0 then None
-               else Some (prop, gr.gr_gid)
-             with Not_found ->
-               Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
-         | Projectused | Projectquota | Projectobjused | Projectobjquota ->
-             Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
+      of_string_opt propname >>= fun prop ->
+      match prop with
+      | Userused | Userquota | Userobjused | Userobjquota -> (
+          try
+            let pw = Unix.getpwnam ident in
+            if zoned && Util.getzoneid () != 0 then None
+            else Some (prop, pw.pw_uid)
+          with Not_found ->
+            Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
+      | Groupused | Groupquota | Groupobjused | Groupobjquota -> (
+          try
+            let gr = Unix.getgrnam ident in
+            if zoned && Util.getzoneid () != 0 then None
+            else Some (prop, gr.gr_gid)
+          with Not_found ->
+            Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
+      | Projectused | Projectquota | Projectobjused | Projectobjquota ->
+          Scanf.sscanf_opt ident "%d%!" (fun rid -> (prop, rid)))
 
 let encode_propname prop rid domain =
   Printf.sprintf "%s@%x-%s" (to_string prop) rid domain

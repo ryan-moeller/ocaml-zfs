@@ -669,24 +669,24 @@ let load_compat compat =
           |> List.concat_map (Str.split (Str.regexp "[, \t][ \t]*"))
           |> List.map String.trim
           |> List.filter_map (fun feature ->
-                 match String.split_on_char ':' feature with
-                 | [ _org; featname ] ->
-                     let feat = Zfeature.of_string featname in
-                     if feat = None then None
-                     else
-                       let attrs = Zfeature.attributes feat in
-                       if attrs.guid = feature then Some attrs.name else None
-                 | _ -> None)
+              match String.split_on_char ':' feature with
+              | [ _org; featname ] ->
+                  let feat = Zfeature.of_string featname in
+                  if feat = None then None
+                  else
+                    let attrs = Zfeature.attributes feat in
+                    if attrs.guid = feature then Some attrs.name else None
+              | _ -> None)
           |> StringSet.of_list |> Option.some
       with Unix.Unix_error (Unix.ENOENT, _, _) -> None
     in
     let results =
       String.split_on_char ',' compat
       |> List.map (fun filename ->
-             [ "/etc/zfs/compatibility.d/"; "/usr/share/zfs/compatibility.d/" ]
-             |> List.find_map (fun directory ->
-                    read_compat_file (directory ^ filename))
-             |> Option.to_result ~none:filename)
+          [ "/etc/zfs/compatibility.d/"; "/usr/share/zfs/compatibility.d/" ]
+          |> List.find_map (fun directory ->
+              read_compat_file (directory ^ filename))
+          |> Option.to_result ~none:filename)
     in
     let errors = List.filter Result.is_error results in
     if not (List.is_empty errors) then

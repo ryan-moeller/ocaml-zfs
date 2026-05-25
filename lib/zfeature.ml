@@ -714,64 +714,65 @@ let to_string prop = (attributes prop).name
 
 let all_features =
   (* Keep in enum spa_features order for ease of maintenance. *)
-  let features = [|
-    Async_destroy;
-    Empty_bpobj;
-    Lz4_compress;
-    Multi_vdev_crash_dump;
-    Spacemap_histogram;
-    Enabled_txg;
-    Hole_birth;
-    Extensible_dataset;
-    Embedded_data;
-    Bookmarks;
-    Fs_ss_limit;
-    Large_blocks;
-    Large_dnode;
-    Sha512;
-    Skein;
-    Edonr;
-    Userobj_accounting;
-    Encryption;
-    Project_quota;
-    Device_removal;
-    Obsolete_counts;
-    Pool_checkpoint;
-    Spacemap_v2;
-    Allocation_classes;
-    Resilver_defer;
-    Bookmark_v2;
-    Redaction_bookmarks;
-    Redacted_datasets;
-    Bookmark_written;
-    Log_spacemap;
-    Livelist;
-    Device_rebuild;
-    Zstd_compress;
-    Draid;
-    Zilsaxattr;
-    Head_errlog;
-    Blake3;
-    Block_cloning;
-    Avz_v2;
-    Redaction_list_spill;
-    Raidz_expansion;
-    Fast_dedup;
-    Longname;
-    Large_microzap;
-  |] in
+  let features =
+    [|
+      Async_destroy;
+      Empty_bpobj;
+      Lz4_compress;
+      Multi_vdev_crash_dump;
+      Spacemap_histogram;
+      Enabled_txg;
+      Hole_birth;
+      Extensible_dataset;
+      Embedded_data;
+      Bookmarks;
+      Fs_ss_limit;
+      Large_blocks;
+      Large_dnode;
+      Sha512;
+      Skein;
+      Edonr;
+      Userobj_accounting;
+      Encryption;
+      Project_quota;
+      Device_removal;
+      Obsolete_counts;
+      Pool_checkpoint;
+      Spacemap_v2;
+      Allocation_classes;
+      Resilver_defer;
+      Bookmark_v2;
+      Redaction_bookmarks;
+      Redacted_datasets;
+      Bookmark_written;
+      Log_spacemap;
+      Livelist;
+      Device_rebuild;
+      Zstd_compress;
+      Draid;
+      Zilsaxattr;
+      Head_errlog;
+      Blake3;
+      Block_cloning;
+      Avz_v2;
+      Redaction_list_spill;
+      Raidz_expansion;
+      Fast_dedup;
+      Longname;
+      Large_microzap;
+    |]
+  in
   match Sysctl.getbyname "kern.osreldate" with
   | Sysctl.Int freebsd_version ->
       if freebsd_version <= 1500056 then features
       else begin
-        let features = Array.append features [|
-          Dynamic_gang_header;
-          Block_cloning_endian;
-          Physical_rewrite;
-        |] in
+        let features =
+          Array.append features
+            [| Dynamic_gang_header; Block_cloning_endian; Physical_rewrite |]
+        in
         if freebsd_version <= 1600015 then features
         else begin
-          Array.append features [| Draid_fail_domains; |]
+          Array.append features [| Draid_fail_domains |]
         end
       end
   | _ -> failwith "kern.osreldate expected Int"
