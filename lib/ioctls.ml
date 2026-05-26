@@ -346,8 +346,9 @@ external destroy_snaps :
   handle -> string -> bytes -> (unit, bytes option * Unix.error) result
   = "caml_zfs_ioc_destroy_snaps"
 
-(* pool_reguid handle name *)
-external pool_reguid : handle -> string -> (unit, Unix.error) result
+(* pool_reguid handle name packed_args *)
+external pool_reguid :
+  handle -> string -> bytes option -> (unit, Unix.error) result
   = "caml_zfs_ioc_pool_reguid"
 
 (* pool_reopen handle name packed_args *)

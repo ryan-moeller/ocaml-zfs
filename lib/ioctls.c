@@ -2916,10 +2916,10 @@ caml_zfs_ioc_destroy_snaps(value handle, value name, value args)
 }
 
 CAMLprim value
-caml_zfs_ioc_pool_reguid(value handle, value name)
+caml_zfs_ioc_pool_reguid(value handle, value name, value args_opt)
 {
-	CAMLparam2 (handle, name);
-	CAMLlocal1 (ret);
+	CAMLparam3 (handle, name, args_opt);
+	CAMLlocal2 (args, ret);
 	zfs_cmd_t zc = {"\0"};
 	int fd, err;
 
@@ -2929,6 +2929,11 @@ caml_zfs_ioc_pool_reguid(value handle, value name)
 		ret = caml_alloc(1, 1);
 		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
 		CAMLreturn (ret);
+	}
+	if (Is_some(args_opt)) {
+		args = Some_val(args_opt);
+		zc.zc_nvlist_src = (uint64_t)(uintptr_t)Bytes_val(args);
+		zc.zc_nvlist_src_size = caml_string_length(args);
 	}
 	caml_release_runtime_system();
 	err = zfs_ioctl(fd, ZFS_IOC_POOL_REGUID, &zc);

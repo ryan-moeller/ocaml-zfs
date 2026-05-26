@@ -478,9 +478,18 @@ let get_history handle poolname cookie =
       let what = Printf.sprintf "cannot get history for '%s'" poolname in
       Error (e, what, why)
 
-let reguid handle poolname =
+let reguid handle poolname guidopt =
   match
-    Ioctls.pool_reguid handle poolname |> Result.map_error zpool_standard_error
+    let packed_args_opt =
+      Option.map
+        (fun guid ->
+          let args = Nvlist.alloc () in
+          Nvlist.add_uint64 args "guid" guid;
+          Nvlist.(pack args Native))
+        guidopt
+    in
+    Ioctls.pool_reguid handle poolname packed_args_opt
+    |> Result.map_error zpool_standard_error
   with
   | Ok () -> Ok ()
   | Error (e, why) ->

@@ -540,7 +540,7 @@ let () =
 let () =
   let vdevs = common_setup () in
   let handle = Ioctls.open_handle () in
-  (match Ioctls.pool_reguid handle test_pool_name with
+  (match Ioctls.pool_reguid handle test_pool_name None with
   | Ok () -> ()
   | Error e ->
       Printf.eprintf "pool_reguid failed\n";
