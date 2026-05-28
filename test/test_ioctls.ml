@@ -444,15 +444,11 @@ let () =
   let vdevs = common_setup () in
   let handle = Ioctls.open_handle () in
   (match Ioctls.pool_stats handle test_pool_name with
-  | Ok packed_config ->
+  | Ok (Some packed_config, altroot, error) ->
       let config = Nvlist.unpack packed_config in
-      ignore config
-  | Error (Some packed_config, e) ->
-      Printf.eprintf "failed pool_stats with config";
-      let config = Nvlist.unpack packed_config in
-      ignore config;
-      failwith @@ Unix.error_message e
-  | Error (None, e) -> failwith @@ Unix.error_message e);
+      ignore (config, altroot, error)
+  | Ok (None, altroot, error) -> ignore (altroot, error)
+  | Error e -> failwith @@ Unix.error_message e);
   common_cleanup vdevs
 
 (* pool_scan *)

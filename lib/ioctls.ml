@@ -36,7 +36,9 @@ external pool_configs :
 
 (* pool_stats handle name *)
 external pool_stats :
-  handle -> string -> (bytes, bytes option * Unix.error) result
+  handle ->
+  string ->
+  (bytes option * string option * Unix.error option, Unix.error) result
   = "caml_zfs_ioc_pool_stats"
 
 (* pool_tryimport handle packed_config *)

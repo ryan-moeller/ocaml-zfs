@@ -336,22 +336,16 @@ caml_zfs_ioc_pool_stats(value handle, value name)
 	fd = Devzfs_val(handle);
 	if (strlcpy(zc.zc_name, String_val(name), sizeof zc.zc_name)
 	    >= sizeof zc.zc_name) {
-		tuple = caml_alloc_tuple(2);
-		Store_field(tuple, 0, Val_none);
-		Store_field(tuple, 1, caml_unix_error_of_code(ENAMETOOLONG));
 		ret = caml_alloc(1, 1);
-		Store_field(ret, 0, tuple);
+		Store_field(ret, 0, caml_unix_error_of_code(ENAMETOOLONG));
 		CAMLreturn (ret);
 	}
 	zc.zc_nvlist_dst_size = 1ULL << 16;
 	zc.zc_nvlist_dst = (uint64_t)(uintptr_t)malloc(zc.zc_nvlist_dst_size);
 	if (zc.zc_nvlist_dst == 0) {
 		err = errno;
-		tuple = caml_alloc_tuple(2);
-		Store_field(tuple, 0, Val_none);
-		Store_field(tuple, 1, caml_unix_error_of_code(err));
 		ret = caml_alloc(1, 1);
-		Store_field(ret, 0, tuple);
+		Store_field(ret, 0, caml_unix_error_of_code(err));
 		CAMLreturn (ret);
 	}
 	caml_release_runtime_system();
@@ -365,30 +359,35 @@ caml_zfs_ioc_pool_stats(value handle, value name)
 		zc.zc_nvlist_dst = (uint64_t)(uintptr_t)newptr;
 	}
 	caml_acquire_runtime_system();
-	if (err) {
-		void *p = (void *)zc.zc_nvlist_dst;
-		free(p);
-		tuple = caml_alloc_tuple(2);
-		Store_field(tuple, 0, Val_none);
-		Store_field(tuple, 1, caml_unix_error_of_code(err));
-		ret = caml_alloc(1, 1);
-		Store_field(ret, 0, tuple);
-	} else if (zc.zc_cookie) {
+	if (zc.zc_nvlist_dst_filled) {
 		char *p = (char *)zc.zc_nvlist_dst;
 		size_t len = (size_t)zc.zc_nvlist_dst_size;
 		bytes = caml_alloc_initialized_string(len, p);
 		free(p);
-		tuple = caml_alloc_tuple(2);
+		tuple = caml_alloc_tuple(3);
 		Store_field(tuple, 0, caml_alloc_some(bytes));
-		Store_field(tuple, 1, caml_unix_error_of_code(zc.zc_cookie));
-		ret = caml_alloc(1, 1);
+		Store_field(tuple, 1, zc.zc_value[0] == '\0' ? Val_none :
+		    caml_alloc_some(caml_copy_string(zc.zc_value)));
+		Store_field(tuple, 2, zc.zc_cookie == 0 ? Val_none :
+		    caml_alloc_some(caml_unix_error_of_code(zc.zc_cookie)));
+		ret = caml_alloc(1, 0);
+		Store_field(ret, 0, tuple);
+	} else if (zc.zc_value[0] != '\0') {
+		void *p = (void *)zc.zc_nvlist_dst;
+		free(p);
+		tuple = caml_alloc_tuple(3);
+		Store_field(tuple, 0, Val_none);
+		Store_field(tuple, 1, caml_alloc_some(caml_copy_string(
+		    zc.zc_value)));
+		Store_field(tuple, 2, err == 0 ? Val_none : caml_alloc_some(
+		    caml_unix_error_of_code(err)));
+		ret = caml_alloc(1, 0);
 		Store_field(ret, 0, tuple);
 	} else {
-		char *p = (char *)zc.zc_nvlist_dst;
-		size_t len = (size_t)zc.zc_nvlist_dst_size;
-		ret = caml_alloc(1, 0);
-		Store_field(ret, 0, caml_alloc_initialized_string(len, p));
+		void *p = (void *)zc.zc_nvlist_dst;
 		free(p);
+		ret = caml_alloc(1, 1);
+		Store_field(ret, 0, caml_unix_error_of_code(err));
 	}
 	CAMLreturn (ret);
 }

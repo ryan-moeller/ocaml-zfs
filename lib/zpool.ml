@@ -334,11 +334,10 @@ let configs handle nsgen =
 
 let stats handle poolname =
   match Ioctls.pool_stats handle poolname with
-  | Ok packed_config ->
-      (* (config, available) *)
-      Ok (Nvlist.unpack packed_config, true)
-  | Error (Some packed_config, _errno) -> Ok (Nvlist.unpack packed_config, false)
-  | Error (None, errno) ->
+  | Ok (Some packed_config, altroot_opt, error_opt) ->
+      Ok (Some Nvlist.(unpack packed_config), altroot_opt, error_opt)
+  | Ok (None, altroot_opt, error_opt) -> Ok (None, altroot_opt, error_opt)
+  | Error errno ->
       let e, why = zpool_standard_error errno in
       let what = "failed to read pool stats" in
       Error (e, what, why)
@@ -371,7 +370,7 @@ let scan handle poolname scan_func scrub_cmd =
         Ok ()
     | Error Unix.EBUSY -> (
         match stats handle poolname with
-        | Ok (config, _available) -> (
+        | Ok (Some config, _altroot, _error) -> (
             let nvroot =
               Option.get @@ Nvlist.lookup_nvlist config "vdev_tree"
             in
@@ -410,7 +409,7 @@ let scan handle poolname scan_func scrub_cmd =
                     Error (EzfsErrorScrubPaused, to_string EzfsErrorScrubPaused))
                 else Error (EzfsResilvering, to_string EzfsResilvering)
             | None -> Error (EzfsResilvering, to_string EzfsResilvering))
-        | Error _ -> Error (EzfsResilvering, to_string EzfsResilvering))
+        | _ -> Error (EzfsResilvering, to_string EzfsResilvering))
     | Error Unix.ENOENT -> Error (EzfsNoScrub, to_string EzfsNoScrub)
     | Error Unix.EOPNOTSUPP when scan_func = ScanResilver ->
         Error (EzfsNoResilverDefer, to_string EzfsNoResilverDefer)
