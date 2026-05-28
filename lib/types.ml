@@ -10,7 +10,7 @@ type import_flags =
   | ImportCheckpoint
 
 type pool_scan_func = ScanNone | ScanScrub | ScanResilver | ScanErrorScrub
-type pool_scrub_cmd = ScrubNormal | ScrubPause
+type pool_scrub_cmd = ScrubNormal | ScrubPause | ScrubFromLastTxg
 
 type pool_scan_stat = {
   func : int64;
