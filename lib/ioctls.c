@@ -841,7 +841,7 @@ make_objset_stats(const dmu_objset_stats_t *stats)
 	CAMLparam0 ();
 	CAMLlocal1 (record);
 
-	record = caml_alloc_tuple(8);
+	record = caml_alloc_tuple(9);
 	Store_field(record, 0, caml_copy_int64(stats->dds_num_clones));
 	Store_field(record, 1, caml_copy_int64(stats->dds_creation_txg));
 	Store_field(record, 2, caml_copy_int64(stats->dds_guid));
@@ -850,6 +850,7 @@ make_objset_stats(const dmu_objset_stats_t *stats)
 	Store_field(record, 5, Val_bool(stats->dds_inconsistent));
 	Store_field(record, 6, Val_bool(stats->dds_redacted));
 	Store_field(record, 7, caml_copy_string(stats->dds_origin));
+	Store_field(record, 8, caml_copy_int32(stats->dds_flags));
 	CAMLreturn (record);
 }
 

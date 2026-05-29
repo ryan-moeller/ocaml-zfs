@@ -66,6 +66,7 @@ type objset_stats = {
   inconsistent : bool;
   redacted : bool;
   origin : string;
+  flags : int32;
 }
 
 type rename_flag = RenameRecursive | RenameNounmount
