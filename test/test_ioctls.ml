@@ -37,8 +37,7 @@ let vdev_file_create name =
   let fd =
     Unix.openfile path [ Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC ] 0o660
   in
-  ignore @@ Unix.lseek fd (test_vdev_size - 1) Unix.SEEK_SET;
-  ignore @@ Unix.write fd (Bytes.make 1 (Char.chr 0)) 0 1;
+  ignore @@ Unix.ftruncate fd test_vdev_size;
   Unix.close fd;
   path
 
