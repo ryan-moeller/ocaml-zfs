@@ -48,7 +48,7 @@ let vdev_label_read path =
     (l * sizeof_vdev_label)
     + if l < vdev_labels / 2 then 0 else size - (vdev_labels * sizeof_vdev_label)
   in
-  let align x = Int.logand x (Int.neg sizeof_vdev_label) in
+  let align x = Int.logand x ((Int.neg sizeof_vdev_label) - 1) in
   let fd = Unix.openfile path [ Unix.O_RDONLY ] 0o660 in
   let stats = Unix.fstat fd in
   let size = align stats.st_size in
