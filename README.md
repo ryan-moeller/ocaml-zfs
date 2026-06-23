@@ -1,8 +1,6 @@
 OCaml OpenZFS Library
 =====================
 
-[![15.0-RELEASE Build Status](https://api.cirrus-ci.com/github/ryan-moeller/ocaml-zfs.svg?branch=main&task=releases/amd64/15.0-RELEASE)](https://cirrus-ci.com/github/ryan-moeller/ocaml-zfs)
-
 This OCaml library exposes low-level OpenZFS ioctls as well as higher level
 abstractions for ease of use.  Neither libzfs nor libzfs_core C libraries are
 used, only libnvpair.  The goal is to explore alternative implementations of
