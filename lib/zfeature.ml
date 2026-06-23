@@ -10,9 +10,9 @@ type t =
   | Bookmarks
   | Device_rebuild
   | Device_removal
-  | Dynamic_gang_header
   | Draid
   | Draid_fail_domains
+  | Dynamic_gang_header
   | Edonr
   | Embedded_data
   | Empty_bpobj
