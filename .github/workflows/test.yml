@@ -1,0 +1,36 @@
+name: "FreeBSD 15.1"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: test on FreeBSD 15.1
+    steps:
+      - uses: actions/checkout@v6
+      - uses: vmactions/freebsd-vm@v1
+        with:
+          release: "15.1"
+          cache-after-prepare: true
+          prepare: |
+            pkg install -y \
+              FreeBSD-src-sys \
+              git \
+              ocaml-opam
+            opam init -y --disable-sandboxing
+            opam switch create 5.5.1
+            eval $(opam env)
+            opam install -y dune
+            opam pin add -y sysctl \
+              git+https://github.com/ryan-moeller/ocaml-sysctl.git
+            opam pin add -y nvpair \
+              git+https://github.com/ryan-moeller/ocaml-nvpair.git
+          run: |
+            set -e
+            eval $(opam env)
+            dune build
+            dune test
