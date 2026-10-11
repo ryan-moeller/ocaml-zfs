@@ -11,9 +11,9 @@
 
 (maintainers "Ryan Moeller")
 
-(license LICENSE)
+(license BSD-2-Clause)
 
-(documentation https://url/to/documentation)
+;(documentation https://url/to/documentation)
 
 (package
  (name zfs)
